@@ -24,6 +24,8 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 - The sphere will blink once, this means it is setting up, and has successfully loaded the animations off the SD card. 
 - Enjoy!
 
+# Notes
+- Was coded with Tab Size set as 2... You will thank me later.
 
 # Todo 
 - Port code to be functional with 2013 shift registers.
