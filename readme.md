@@ -24,11 +24,11 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 - Enjoy!
 
 # Credits
-Visionary: Erin Banwell
-Original Pyrosphere Code: Steve Cronberg
-Shift Registers: Designed & Soldered by Leif
-Fire and Safety: Shannon Stillman
-Pyrosphere Build Crew: James Hall, Shine, Billy Hopkins,
-Programming: Jordan Layman and Sean Mitchell
-Funding: Countless individuals, thanks!
+- Visionary: Erin Banwell
+- Original Pyrosphere Code: Steve Cronberg
+- Shift Registers: Designed & Soldered by Leif
+- Fire and Safety: Shannon Stillman
+- Pyrosphere Build Crew: James Hall, Shine, Billy Hopkins,
+- Programming: Jordan Layman and Sean Mitchell
+- Funding: Countless individuals, thanks!
 
