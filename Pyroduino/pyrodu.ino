@@ -5,13 +5,13 @@
 #include 		<SdFat.h>
 #include 		<SdFatUtil.h>
 // Pin values for talking to shift registers
-#define 		DATA_PIN 7          // Data pin for serial communication to shift registers
-#define 		LATCH_PIN 2         // Latch pin for serial communication to shift registers
-#define 		CLOCK_PIN 6         // Clock pin for serial communication to shift registers
+#define 		DATA_PIN 							7 // Data pin for serial communication to shift registers
+#define 		LATCH_PIN 						2 // Latch pin for serial communication to shift registers
+#define 		CLOCK_PIN 						6 // Clock pin for serial communication to shift registers
 // General Definitions
-#define 		TOTAL_REGISTERS 12   // Total registers (chips, bytes) being talked to
-#define 		TOTAL_NODES 96       // 0 -  85 makes 86 nodes
-#define 		FILE_NAME_SIZE 12    // 8.3 filenames need 12 char to define them
+#define 		TOTAL_REGISTERS 			12 // Total registers (chips, bytes) being talked to
+#define 		TOTAL_NODES 					96 // 0 -  85 makes 86 nodes
+#define 		FILE_NAME_SIZE 				12 // 8.3 filenames need 12 char to define them
 //Holds the current frame? ...Don't think this is used anywhere. 
 typedef struct _frame {
   int8_t frameChunk[TOTAL_REGISTERS];
@@ -26,41 +26,42 @@ SdVolume 		volume;
 SdFile 			root;
 SdFile 			animation;
 //SD Settings.
-int 				chipSelect = 						8;
-uint8_t	 		partition = 						1;
+int 				chipSelect 						= 8;
+uint8_t	 		partition 						= 1;
 dir_t 			directory;
 int 				totalFiles;
 //
 char 				currentFile[FILE_NAME_SIZE]; 						 // The current animation file we're on, assumining 8+3 filename
 //Runtime Variables
 long 				nodeTimeStamps[TOTAL_NODES]; 						 // Since defining arrays requires you put in the total number of elements, add 1
-long 				frameInterval = 				20;             // Interval between frames
-long 				frameDuration = 				400;              // Time a given  is on 
+long 				frameInterval 				= 20;             // Interval between frames
+long 				frameDuration 				=	400;              // Time a given  is on 
 // Interval Limits
-long 				maxInterval = 					1000;
-long 				minInterval = 					35;
+long 				minFrameInterval 					= 35;
+long 				maxFrameInterval 					= 10000;
 // Duration Limits
-long 				maxDuration = 					750;
-long 				minDuration = 					10;
+long 				maxFrameDuration 					=	750;
+long 				minFrameDuration 					=	10;
 //Chillout mode
-	bool 				chilloutMode = 					false;
-long 				chilloutInterval =  		60*60*3; 					//Every 3 hours. //milliseconds until next chillout.
-long 				chilloutDuration = 			60*5; 						//5 Minutes.
+bool 				chilloutMode 					= false;
+long 				chilloutInterval 			= 60*60*3; 					//Every 3 hours. //milliseconds until next chillout.
+long 				chilloutDuration 			= 60*5; 						//5 Minutes.
 long 				chilloutFrameInterval = 3000; 						//This is how long in between each frame in Chillout Mode
 long 				chilloutFrameDuration = 500; 							//The duration of the flame.
 // Control Mode
-int 				controlMode = 					0; 								//default: random;
+int 				controlMode 					= 0; 								//default: random;
 //Frame
 Frame 			frameBuffer;
 char 				messageBuffer[20];
 char 				patterns;
-int 				bufferIndex = 					0; 								//This global manages the buffer index.
-
-boolean 		status = 								false; 						//TODO: Add the capability to enable and disable debugging remotely! See 'toggledebug'
-boolean 		debug = 								true;							// Where the frame is updated until we're ready to send the data to the shift registers
-
+//
+int 				bufferIndex 					= 0; 								//This global manages the buffer index.
+//
+boolean 		status								= false; 						//TODO: Add the capability to enable and disable debugging remotely! See 'toggledebug'
+boolean 		debug 								= true;							// Where the frame is updated until we're ready to send the data to the shift registers
 // This array maps a node number to a register and bit. It won't change during the course of the program
 const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95};
+
 
 boolean updateFrame(){
 	
@@ -112,7 +113,13 @@ boolean getTotalFiles(){
 	return true;
 }
 
+// AUTOPILOT!
 
+void goGoAutoPilot(){
+	//Here we would switch through progressive mode, random mode, chillout mode, and break mode (repeat)
+	//GoGoAutopolot is disrupted when there is serial information.
+	randomAnimation(); //for now let's call random animation.
+}
 
 void randomAnimation(){
   int randNum = random(totalFiles);
@@ -211,9 +218,6 @@ void setup(){
 }
 
 
-
-
-
 /*
 
 	#     # ####### #     # #     # ####### 
@@ -290,18 +294,19 @@ boolean mount(){
 */
 
 // Timing.
-static long 				then = 0;            // Last time a frame was refreshed
-static long 				now = 0;                 // Will be populated with the current millisecond at the beginning of the loop
+static long 				then 						= 0;            // Last time a frame was refreshed
+static long 				now 						= 0;                 // Will be populated with the current millisecond at the beginning of the loop
 
 //	Animation Loop Settings.
-static int8_t loopThresh = 3;
-static int8_t loopCount = loopThresh + 1;
+static int8_t 			loopThresh 			= 3;
+static int8_t 			loopCount 			= loopThresh + 1;
 
-//Automode (right now random, let's diversify!)
-static boolean autoMode = true;						//
-static long serialTimeout = 20000;					//How long after serial is silent will automode begin.
-static long lastSerialCMD = 0;							//Last time a serial command was recieved
-int readMode = 0; //Wait
+//autoPilot (right now random, let's diversify!)
+static boolean 			autoPilot 			= true;					//Initiates the pilot
+static long 				serialTimeout 	= 20000;				//How long after serial is silent will autoPilot begin.
+static long 				lastSerialCMD 	= 0;						//Last time a serial command was recieved
+int 								readMode 				= 0; 						//Wait
+int									systemMode 			= 0;    				//Random, 1: MasterController, 2: Valve Tracer
 
 void loop() 
 {
@@ -315,29 +320,20 @@ void loop()
 	
   now = millis();       	// This moment is beautiful.
 	//
-  
 	flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
 	//
-	
 	modeSelektor();					// Select mode based on information.
 	//
-	
 	serialPolling();				// Check for last CMD
 	//
-	
   ignite();       				// Send the 1011 and let the people have some fun.
-
 	//We are polling the serial connection.
 	while(Serial.available() > 0) {
-
     char x = Serial.read();
-
 		serialRouting(x);
-		
 	}
-
   // this checks the button states, and changes the current pattern we're on
- // checkRemote();
+  // checkRemote();
 }
 
 void serialRouting(char x){
@@ -347,27 +343,26 @@ void serialRouting(char x){
 	else if  	(x == '#') 		{		readMode 	= 3; 		}					//Frame Interval
 	else if   (x == '$') 		{		readMode 	= 4;  	}					//Shift Register IDs, separated by comma (no whitespace)
 	else if   (x == '~') 		{		readMode 	= 5;  	}					//System Mode 
-	else if  	(x == '/') 		{		getFiles(); 	}		
+	else if  	(x == '/') 		{		getFiles(); 			}		
 	//Add custom flags here.
 	
 	//Finish up
 	else if 	(x == '.') 		{ 	//...
 		
-			//This will update the global variables accordingly.
-			//p
-			switch(readMode){
+		//This will update the global variables accordingly.
+		//p
+		switch(readMode){
 			case 1: 			setPattern();   		break;
 			case 2:  			setDuration();  		break;
 			case 3:  			setInterval();  		break;
 			case 4: 			setValves(); 				break;
 			case 5: 			setMode();					break;
 			default:  												break;	
-			}
+		}
 		
-		
-			lastSerialCMD = now; 						//Used for switching to autoMode
+			lastSerialCMD = now; 						//Used for switching to autoPilot
 			readMode = 0;										//We're done reading. (until another.)
-			autoMode = false;
+			autoPilot = false;
 		
 			bufferIndex = 0;
 					
@@ -404,10 +399,10 @@ flame control
 
 void serialPolling(){
 	if(now - lastSerialCMD > serialTimeout){  
-    if(autoMode == false){
+    if(autoPilot == false){
       Serial.println("Automatic love generation.");
     }      
-    autoMode = true;
+    autoPilot = true;
   }
 }
 
@@ -418,7 +413,7 @@ void serialPolling(){
 
 void modeSelektor(){
 	long since = now - then;
-	if(since > frameInterval || since > maxInterval){  
+	if(since > frameInterval || since > maxFrameInterval){  
 	  // Go to next frame
 		nextFrame();
 	}
@@ -428,10 +423,10 @@ void modeSelektor(){
 void nextFrame(){
 	if(updateFrame()){
     if(loopCount > loopThresh){
-      if(autoMode){
+      if(autoPilot){
 				// if 				(controlMode == '0') 	randomAnimation();
 				// else if 	(controlMode == '1') 	progressiveAnimation();
-				randomAnimation();
+				autopilot();
       }
       loopCount = 0;
     } else {
@@ -452,7 +447,7 @@ void flameSustain(){
   for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
 		long onFor = now - nodeTimeStamps[i];
     if(nodeTimeStamps[i] > 0){
-      if(onFor > frameDuration || onFor > maxDuration){
+      if(onFor > frameDuration || onFor > maxFrameDuration){
         nodeOff(i);
       }
     }
@@ -473,7 +468,7 @@ void flameSustain(){
 
 */
 
-				
+	/*			
 	 * Pattern
 	 * Selects from available patterns
 	 */
@@ -638,71 +633,6 @@ void changePattern (char *fileName){
 			Serial.print("Couldn't open pattern:"); Serial.print(fileName); 
 		}
 }
-
-
-/*
-
-
-	######  #     # 
-	#     #  #   #  
-	#     #   # #   
-	######     #    
-	#   #     # #   
-	#    #   #   #  
-	#     # #     # 
-	
-	 #####  ####### ######  ###    #    #       
-	#     # #       #     #  #    # #   #       
-	#       #       #     #  #   #   #  #       
-	 #####  #####   ######   #  #     # #       
-	      # #       #   #    #  ####### #       
-	#     # #       #    #   #  #     # #       
-	 #####  ####### #     # ### #     # #######
-
-	rx serial
-
-*/
-
-// /**
-//  * Deal with a full message and determine function to call
-//  */
-// void processRequest() {
-//   bufferIndex = 0;
-//   
-//   strncpy(cmd, messageBuffer, 2);     		cmd[2] = '\0';
-//   // strncpy(pin, messageBuffer + 2, 2); 		pin[2] = '\0';
-//   strncpy(val, messageBuffer + 3, 4); 		val[4] = '\0';
-//   // strncpy(meta, messageBuffer + 7, 3); 		meta[3] = '\0';
-// 
-//   
-//   if (debug) {
-// 		Serial.print("Message Buffer: ");
-// 		Serial.println(messageBuffer); 
-// 
-// 		Serial.print("Command: ");
-// 		Serial.println(cmd);
-// 
-// 		Serial.print("Value: ");
-// 		Serial.println(val);
-// 		}
-// 
-// 		//This changes 01 (string) to 1 (int)
-//   int cmdid = atoi(cmd);
-//   
-// 	//Switch through possible commands
-//   switch(cmdid) {
-// 		case 1:  setPattern(val);        break;
-// 		case 2:  setInterval(val);       break;
-// 		case 3:  setDuration(val);       break;
-// 		// case 10: dr(val);                   break;
-//     case 90: autoReply();               break;
-//     case 99: toggleDebug(val);          break;
-//     default:                            break;
-//   }
-// }
-
-
-
 
 
 /*
