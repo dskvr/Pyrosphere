@@ -161,6 +161,8 @@
 					base.updateFollowerLines(touch.x, touch.y);
 					
 					base.pointerAlpha();
+					base.pointerDims();
+					base.valueFontSize();
 					
 					if(now - base.lastUpdate < base.options.refreshRate) return;
 					
@@ -179,7 +181,8 @@
 				}
 				
 				base.uiReset = function(){
-					base.$pointer.fadeIn('fast');
+					base.$pointer.fadeIn();
+					
 				}
 
 				base.updateOptions = function(key, value){
@@ -190,8 +193,8 @@
 				}
 				
 				base.updateStats = function(){
-					var $dur = $('.duration');
-					var $intval = $('.interval');
+					var $dur = $('.duration .value');
+					var $intval = $('.interval .value');
 					
 					$dur.html(base.options.frameDuration);
 					$intval.html(base.options.frameInterval);
@@ -239,11 +242,44 @@
 					var average = (base.options.frameDuration + base.options.frameInterval) / 2;
 					var max = $(document).width() > $(document).height() ? $(document).width()  : $(document).height(); //Bigger of the two
 					// console.log('Max' + max);
-					var alpha = base.normalize(average, 0, max, 0.20, 0.85); //Normalize average between
-					base.$pointer.find('.gradient').css('opacity', alpha);
-					
-					
+					var alpha = base.normalize(average, 0, max, 0.10, 0.60); //Normalize average between
+					base.$pointer.find('.gradient').css('opacity', alpha);					
 					// console.log('alpha: '+alpha);
+				}
+				
+				base.valueFontSize = function(){
+					var size = {};
+							size.duration = base.normalize(base.options.frameDuration, 20, 750, 40, 200 );
+							size.interval = base.normalize(base.options.frameInterval, 20, 750, 40, 200 );
+							
+					$('header .duration .value').css('font-size', size.duration+'pt');
+					$('header .interval .value').css('font-size', size.interval+'pt');
+				}
+				
+				base.setupPointerTransitions = function(){
+					base.$pointer.transitionDirs = [
+						{ left : base.$pointer.width()*-1 }, //left
+						{ left : $(document).width() }, //right
+						{ top : base.$pointer.height()*-1  }, //up
+						{ top : $(document).height() }, //down
+						{ left : base.$pointer.width()*-1, top : base.$pointer.height()*-1 }, //left up
+						{ left : base.$pointer.width()*-1, top : $(document).height() }, //left down
+						{ left : $(document).width(), top : base.$pointer.height()*-1 }, //right up
+						{ left : $(document).width(), top : $(document).height() } //right down
+					];
+					base.$pointer.transitionDirs = shuffle(base.$pointer.transitionDirs);
+				}
+				
+				base.pointerDims = function(){
+					var raw = {}
+							raw.width = (!base.options.invertAxis) ? base.options.frameInterval : base.options.frameDuration;
+							raw.height = (!base.options.invertAxis) ? base.options.frameDuration : base.options.frameInterval;
+							
+					var normal = {};
+							normal.width = base.normalize(raw.width, 0, 750, 30, $(document).width()*2);
+							normal.height = base.normalize(raw.height, 0, 750, 30, $(document).height()*2);
+							
+					base.$pointer.css('width', normal.width+'px').css('height', normal.height+'px')
 				}
 
         base.init = function(){
@@ -251,6 +287,8 @@
           base.options = $.extend({},$.Pyro.Master.defaultOptions, options);
 
 					base.setupFollowerLines();
+					
+					base.setupPointerTransitions();
 
 					// base.updateOptions('frameDuration', (!base.options.invertAxis ? touch.x : touch.y) );
 
@@ -295,7 +333,7 @@
 							
 							base.mouseDown = true;
 
-							base.uiReset();
+							base.$pointer.css('opacity', 1);
 
 							var touch = new Object();
 									touch.y = event.pageY;
@@ -333,25 +371,18 @@
 							
 							base.mouseDown = false;
 							
-							var dirs = [
-								{ left : base.$pointer.width()*-1 }, //left
-								{ left : $(document).width() }, //right
-								{ top : base.$pointer.height()*-1  }, //ou
-								{ top : $(document).height() }, //down
-								{ left : base.$pointer.width()*-1, top : base.$pointer.height()*-1 }, //left up
-								{ left : base.$pointer.width()*-1, top : $(document).height() }, //left down
-								{ right : $(document).width(), top : base.$pointer.height()*-1 }, //right up
-								{ right : $(document).width(), top : $(document).height() } //right down
-							];
-							
 							var rand = Math.round(Math.random()*7);
-							console.log('Rand: '+rand);
+							// console.log('Rand: '+rand);
 
 							//Will tell the pyrosphere to turn completely off.
 							if(!base.options.persistence) {
 								
-								base.$pointer.stop().animate(dirs[rand], 100, function(){
-									base.$pointer.css({ left : base.$pointer.width()*-1, top : base.$pointer.width()*-1 });
+								var trans = base.$pointer.transitionDirs[rand];
+										trans.easing = 'easeInExpo';
+										trans.opacity = 0;
+								
+								base.$pointer.stop().animate(trans, 250, function(){
+									// base.$pointer.css({ left : base.$pointer.width()*-1, top : base.$pointer.width()*-1 });
 								});
 								$('.follower').fadeOut(100);
 								base.request += '*0.';
@@ -361,6 +392,7 @@
 								// $.Pyro.socket.emit('masterController', '*0.');
 								// $.Pyro.requestReset();
 							}
+							
 						});
 						
 					setTimeout(function(){
@@ -377,7 +409,7 @@
 								// $.Pyro.requestReset();	
 							}
 						}, base.options.refreshRate);
-				}, 300);
+				}, 1000);
 			
 			}
 

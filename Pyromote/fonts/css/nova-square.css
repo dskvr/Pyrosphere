@@ -1,0 +1,6 @@
+@font-face {
+  font-family: 'Nova Square';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Nova Square'), local('NovaSquare'), url('../woffs/nova-square.woff') format('woff');
+}
