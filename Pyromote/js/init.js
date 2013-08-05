@@ -329,40 +329,28 @@
 
 						})
 						
-						// .bind('mouseout', function(event){
-						// 							base.mouseDown = false;
-						// 
-						// 							//Will tell the pyrosphere to turn completely off.
-						// 							if(!base.options.persistence) {
-						// 								base.$pointer.animate({top: -100}, 200, function(){
-						// 									base.$pointer.css({ left : -100, top : -100 });
-						// 								});
-						// 
-						// 								base.updateOptions('active', false);
-						// 								// $.Pyro.socket.send($.Pyro.request);
-						// 								// $.Pyro.requestReset();
-						// 							}
-						// 						})
-						
 						.bind('mouseup', function(event){
 							
 							base.mouseDown = false;
 							
 							var dirs = [
-								{ left : base.$pointer.width()*-1 } //left
-								{ left : $(document).width() } //right
-								{ top : base.$pointer.height()*-1  } //ou
-								{ top : $(document).height() } //down
-								{ left : base.$pointer.width()*-1, top : base.$pointer.height()*-1 } //left up
-								{ left : base.$pointer.width()*-1, top : $(document).height() } //left down
-								{ right : $(document).width(), top : base.$pointer.height()*-1 } //right up
+								{ left : base.$pointer.width()*-1 }, //left
+								{ left : $(document).width() }, //right
+								{ top : base.$pointer.height()*-1  }, //ou
+								{ top : $(document).height() }, //down
+								{ left : base.$pointer.width()*-1, top : base.$pointer.height()*-1 }, //left up
+								{ left : base.$pointer.width()*-1, top : $(document).height() }, //left down
+								{ right : $(document).width(), top : base.$pointer.height()*-1 }, //right up
 								{ right : $(document).width(), top : $(document).height() } //right down
-							]
+							];
+							
+							var rand = Math.round(Math.random()*7);
+							console.log('Rand: '+rand);
 
 							//Will tell the pyrosphere to turn completely off.
 							if(!base.options.persistence) {
 								
-								base.$pointer.animate({top: -100}, 200, function(){
+								base.$pointer.stop().animate(dirs[rand], 100, function(){
 									base.$pointer.css({ left : base.$pointer.width()*-1, top : base.$pointer.width()*-1 });
 								});
 								$('.follower').fadeOut(100);
@@ -375,12 +363,13 @@
 							}
 						});
 						
+					setTimeout(function(){
 						$.Pyro.watcher = setInterval(function(){
 							base.$el.data("Pyro.Master");
 							if(base.request.length) {
 								// $.Pyro.socket.send($.Pyro.request);
 								// $.Pyro.requestReset();	
-							
+				
 								// console.log(base.options);
 								console.log('Request: '+base.request);
 								base.request = '';
@@ -388,9 +377,9 @@
 								// $.Pyro.requestReset();	
 							}
 						}, base.options.refreshRate);
-
-				
-        };
+				}, 300);
+			
+			}
 
 				
 				//Initilize;
@@ -440,6 +429,4 @@
 		        });
 		    });
 		};
-
-
 })(jQuery);

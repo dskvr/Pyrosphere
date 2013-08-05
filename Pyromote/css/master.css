@@ -4,8 +4,8 @@ body, html, body > section, body > section > article 		 { height:100%; margin:0;
 header {position:absolute; }
 header ul li {display:inline-block; color:#fff}
 
-section[role=xaxis] { position:absolute; top: 0px; left:0px; right:0px; height:50px; border-bottom:3px solid #222; }
-section[role=yaxis] { position:absolute; top: 0px; bottom:0px; left:0px; width:50px; border-right:3px solid #222; }
+section[role=xaxis] { position:absolute; top: 0px; left:0px; right:0px; height:9px; border-bottom:3px solid #222; }
+section[role=yaxis] { position:absolute; top: 0px; bottom:0px; left:0px; width:9px; border-right:3px solid #222; }
 
 
 body 					 { background:#000; overflow:hidden; }
