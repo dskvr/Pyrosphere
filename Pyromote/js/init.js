@@ -24,30 +24,6 @@
 	$(function(){
 		$('#master').pyromote();
 	});
-	
-(function($){
-	
-	$.Pyro = new Object();
-	
-	$.Pyro.watcher = null; //Placeholder for interval.
-	
-	// $.Pyro.socket = socket;
-	
-	//Namespace vars
-	base.request = "";
-	
-	//Namespace helpers
-	$.Pyro.requestReset = function(){
-		base.request = "";
-		$.Pyro.debug();
-	}
-	
-	$.Pyro.debug = function(){
-		console.log('Request: '+$.Pyro.request);
-	}
-	
-});
-
 
 (function($){
 	
@@ -98,7 +74,11 @@
         $.Pyro = new Object();
     }
 
-    $.Pyro.Master = function(el, options){
+		if(!$.Pyro.UI){
+			$.Pyro.UI = new Object();
+		}
+
+    $.Pyro.UI.Master = function(el, options){
         var base = this;
 
         base.$el = $(el);
@@ -148,8 +128,8 @@
 							
 					//Max range value
 							base.current.normalized = {}
-							base.current.normalized.duration = Math.round(base.normalize(base.current.oriented.duration, 0, base.current.limits.duration, 30, 750)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
-							base.current.normalized.interval = Math.round(base.normalize(base.current.oriented.interval, 0, base.current.limits.interval, 30, 750)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
+							base.current.normalized.duration = Math.round(normalize(base.current.oriented.duration, 0, base.current.limits.duration, $.Pyro.Config.Limits.Duration.Min, $.Pyro.Config.Limits.Duration.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
+							base.current.normalized.interval = Math.round(normalize(base.current.oriented.interval, 0, base.current.limits.interval, $.Pyro.Config.Limits.Interval.Min, $.Pyro.Config.Limits.Interval.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
 						
 					base.updateOptions('frameDuration', base.current.normalized.duration );
 					base.updateOptions('frameInterval', base.current.normalized.interval );
@@ -171,13 +151,6 @@
 					// $.Pyro. 	.send($.Pyro.request);
 					// $.Pyro.requestReset();
 					// $.Pyro.debug();
-				}
-				
-				base.normalize = function(SET, rangeLow, rangeHigh, toMin, toMax, round){
-					toMin = toMin || 0;
-					toMax = toMax || 1000;
-					var result = toMin + (SET-rangeLow)*(toMax-toMin)/(rangeHigh-rangeLow);
-					return round ? Math.round(result) : result;
 				}
 				
 				base.uiReset = function(){
@@ -242,15 +215,15 @@
 					var average = (base.options.frameDuration + base.options.frameInterval) / 2;
 					var max = $(document).width() > $(document).height() ? $(document).width()  : $(document).height(); //Bigger of the two
 					// console.log('Max' + max);
-					var alpha = base.normalize(average, 0, max, 0.10, 0.60); //Normalize average between
+					var alpha = normalize(average, 0, max, 0.10, 0.60); //Normalize average between
 					base.$pointer.find('.gradient').css('opacity', alpha);					
 					// console.log('alpha: '+alpha);
 				}
 				
 				base.valueFontSize = function(){
 					var size = {};
-							size.duration = base.normalize(base.options.frameDuration, 20, 750, 40, 200 );
-							size.interval = base.normalize(base.options.frameInterval, 20, 750, 40, 200 );
+							size.duration = normalize(base.options.frameDuration, 20, 750, 40, 200 );
+							size.interval = normalize(base.options.frameInterval, 20, 750, 40, 200 );
 							
 					$('header .duration .value').css('font-size', size.duration+'pt');
 					$('header .interval .value').css('font-size', size.interval+'pt');
@@ -276,15 +249,15 @@
 							raw.height = (!base.options.invertAxis) ? base.options.frameDuration : base.options.frameInterval;
 							
 					var normal = {};
-							normal.width = base.normalize(raw.width, 0, 750, 30, $(document).width()*2);
-							normal.height = base.normalize(raw.height, 0, 750, 30, $(document).height()*2);
+							normal.width = normalize(raw.width, 0, 750, 30, $(document).width()*2);
+							normal.height = normalize(raw.height, 0, 750, 30, $(document).height()*2);
 							
 					base.$pointer.css('width', normal.width+'px').css('height', normal.height+'px')
 				}
 
         base.init = function(){
 					
-          base.options = $.extend({},$.Pyro.Master.defaultOptions, options);
+          base.options = $.extend({},$.Pyro.UI.Master.defaultOptions, options);
 
 					base.setupFollowerLines();
 					
@@ -420,9 +393,35 @@
 				
     };
 
-    $.Pyro.Master.defaultOptions = {
+		$.Pyro.UI.userPrefs = {
+			scaleAxis : {
+				x : {
+					min : 40,
+					max : 750
+				},
+				y : {
+					min : 40,
+					max : 750
+				}
+			},
+			brightness : {
+				pointer : 0.85,
+				grid : 0.2,
+				stats : 0.1
+			},
+			display : {
+				grid : true,
+				stats : true,
+				pointer : true,
+				menu : false
+			}
+		}
+
+    $.Pyro.UI.Master.defaultOptions = {
 				//Parameters
 				active: false,					// Opposite of Idle. Reason: shouldn't test false(idle) for true, thus active.
+				
+				// Animation Parameters
         frameDuration: 300,			// Length of a frame
         frameInterval: 100,			// Time between frames
         patternInterval: 100,		//
@@ -434,10 +433,14 @@
 				invertAxis: false        //By default, x is frameDuration and y is frameInterval
     };
 
+		/******************************************************************
+		/*** jQuery Methods
+		/******************************************************************/
+		
 		//$('.element').pyromote(400, 1000, 400, "00", {});
     $.fn.pyromote = function(options){
         return this.each(function(){
-            new $.Pyro.Master(this, options);
+            new $.Pyro.UI.Master(this, options);
         });
     };
 
@@ -461,4 +464,6 @@
 		        });
 		    });
 		};
+		
+		
 })(jQuery);
