@@ -108,29 +108,30 @@
 					
 					var now = new Date().getTime();
 					
-							base.current = {};
-							//
-							base.current.dim = {};
-							base.current.dim.width = base.$pointer.width();
-							base.current.dim.height = base.$pointer.height();
-							
-							base.current.css = { left : touch.x - (base.current.dim.width/2), top : touch.y - (base.current.dim.height/2)}
-							
-							//Raw touch values, not normalized to ranges yet. Considering user preference.
-							base.current.oriented = {}
-							base.current.oriented.duration = !base.options.invertAxis ? touch.x : touch.y;
-							base.current.oriented.interval = !base.options.invertAxis ? touch.y : touch.x;
-							
-							//Interfacing limits. Considering axis inversion, max width or height.
-							base.current.limits = {}
-							base.current.limits.duration = !base.options.invertAxis ? $(document).width() : $(document).height();
-							base.current.limits.interval = !base.options.invertAxis ? $(document).height() : $(document).width();
-							
+					base.current = {};
+					//
+					base.current.dim = {};
+					base.current.dim.width = base.$pointer.width();
+					base.current.dim.height = base.$pointer.height();
+					
+					base.current.css = { left : touch.x - (base.current.dim.width/2), top : touch.y - (base.current.dim.height/2)}
+					
+					//Raw touch values, not normalized to ranges yet. Considering user preference.
+					base.current.oriented = {}
+					base.current.oriented.duration = !base.options.invertAxis ? touch.x : touch.y;
+					base.current.oriented.interval = !base.options.invertAxis ? touch.y : touch.x;
+					
+					//Interfacing limits. Considering axis inversion, max width or height.
+					base.current.limits = {}
+					base.current.limits.duration = !base.options.invertAxis ? $(document).width() : $(document).height();
+					base.current.limits.interval = !base.options.invertAxis ? $(document).height() : $(document).width();
+					
 					//Max range value
-							base.current.normalized = {}
-							base.current.normalized.duration = Math.round(normalize(base.current.oriented.duration, 0, base.current.limits.duration, $.Pyro.Config.Limits.Duration.Min, $.Pyro.Config.Limits.Duration.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
-							base.current.normalized.interval = Math.round(normalize(base.current.oriented.interval, 0, base.current.limits.interval, $.Pyro.Config.Limits.Interval.Min, $.Pyro.Config.Limits.Interval.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
-						
+					base.current.normalized = {}
+					base.current.normalized.duration = Math.round(normalize(base.current.oriented.duration, 0, base.current.limits.duration, $.Pyro.Config.Limits.Duration.Min, $.Pyro.Config.Limits.Duration.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
+					base.current.normalized.interval = Math.round(normalize(base.current.oriented.interval, 0, base.current.limits.interval, $.Pyro.Config.Limits.Interval.Min, $.Pyro.Config.Limits.Interval.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
+				
+					//Change the options.
 					base.updateOptions('frameDuration', base.current.normalized.duration );
 					base.updateOptions('frameInterval', base.current.normalized.interval );
 					
@@ -145,7 +146,6 @@
 					base.valueFontSize();
 					
 					if(now - base.lastUpdate < base.options.refreshRate) return;
-					
 					base.$el.data("Pyro.Master", base);
 					
 					// $.Pyro. 	.send($.Pyro.request);
@@ -181,9 +181,7 @@
 					$y.appendTo('body');
 					
 					$x.css({ left: '0px', right  : '0px' }).addClass('follower x');
-					$y.css({ top : '0px', bottom : '0px' }).addClass('follower y');;
-					
-				
+					$y.css({ top : '0px', bottom : '0px' }).addClass('follower y');
 				}
 				
 				base.updateFollowerLines = function(x, y) {
@@ -300,25 +298,32 @@
 						});
 						
 					base.mouseDown = false;
+					
 						
 					base.$grid
 						.bind('mousedown', function(event){
 							
+							$.playSound('sounds/welcome.wav');
+							
 							base.mouseDown = true;
+							
+							$(this).trigger('mousemove');
 
-							base.$pointer.css('opacity', 1);
+							base.$pointer
+								.stop()
+								.css({ top: event.pageY, left: event.pageX, opacity : 1 });
 
 							var touch = new Object();
 									touch.y = event.pageY;
 									touch.x = event.pageX;
 
 							base.gridInteraction(touch);
-							
-							base.pointerRotate = typeof base.pointerRotate != 'undefined' ? base.pointerRotate+10 : 0;
-					
-							base.$pointer.find('.zero').css({
-                  transform: 'rotate(' + base.pointerRotate + 'deg)'
-              });
+							// 	
+							// base.pointerRotate = typeof base.pointerRotate != 'undefined' ? base.pointerRotate+10 : 0;
+							// 					
+							// base.$pointer.find('.zero').css({
+							//                   transform: 'rotate(' + base.pointerRotate + 'deg)'
+							//               });
 
 						})
 						
@@ -379,6 +384,7 @@
 								console.log('Request: '+base.request);
 								base.request = '';
 								base.$el.data("Pyro.Master", base);
+								base.idleCheck();
 								// $.Pyro.requestReset();	
 							}
 						}, base.options.refreshRate);
@@ -393,7 +399,7 @@
 				
     };
 
-		$.Pyro.UI.userPrefs = {
+		$.Pyro.UI.Master.userPrefs = {
 			scaleAxis : {
 				x : {
 					min : 40,
@@ -430,7 +436,16 @@
 				refreshRate: 20,					// This is how fast it will send the server a request.
 				
 				//Interface Preferences
-				invertAxis: false        //By default, x is frameDuration and y is frameInterval
+				invertAxis: false,        //By default, x is frameDuration and y is frameInterval
+				
+				callbacks: {
+					load : function(ui, sphere){ },
+					change : function(value, ui, sphere){ },
+					onIdle : function(event, ui, sphere) { },
+					onActive : function(event, ui, sphere) { },
+					toolbarShow : function(toolbar, ui, sphere) { }
+				}
+				
     };
 
 		/******************************************************************

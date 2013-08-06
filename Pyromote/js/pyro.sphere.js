@@ -2,29 +2,32 @@
     if(!$.Pyro){
         $.Pyro = new Object();
     };
-    
-    $.Pyro.Sphere = function(el, options){
-        var base = this;
-        
-        base.$el = $(el);
-        base.el = el;
-        
-        base.$el.data("Pyro.Sphere", base);
-        
-        base.init = function(){
-            base.options = $.extend({},$.Pyro.Sphere.defaultOptions, options);
-            
-        };
-        base.init();
+
+		$.Pyro.Sphere = function(sss){
+			var sphere = this;			
+		}
+		
+		$.Pyro.Sphere.init = function(){
+			
+		}
+
+		$.Pyro.Sphere.Update = function(method, message){
+				method = method ? 'sphere.'+method : 'sphere';
+				//
+        $.Pyro.socket.emit(method, message);
+				//
+    };
+
+		$.Pyro.Sphere.Off = function(pyro, message){
+				$.Pyro.socket.emit('sphere.active', 0);
+    };
+
+		$.Pyro.Sphere.On = function(el, message){
+       $.Pyro.socket.emit('sphere.active', 1);
     };
     
     $.Pyro.Sphere.defaultOptions = {
-    };
-    
-    $.fn.pyro_Sphere = function(options){
-        return this.each(function(){
-            (new $.Pyro.Sphere(this, options));
-        });
+	
     };
     
 })(jQuery);

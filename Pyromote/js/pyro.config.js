@@ -7,10 +7,9 @@
 $(function($){
 	
 	$.Pyro.Config = new Object();
-	
-	//Placeholder for mathematical limits
 	$.Pyro.Config.Limits = new Object();
-	
+
+
 	//
 	// ACTIONABLE PARAMS
 	//
@@ -23,9 +22,11 @@ $(function($){
 	$.Pyro.Config.Limits.Duration = new Object();
 	$.Pyro.Config.Limits.Duration.Min = 40;
 	$.Pyro.Config.Limits.Duration.Max = 750;
-	
+
+
+	//
 	// UI PREFERENCES
-	
+	//
 	//Alpha of the stats limits, these are normalized.
 	$.Pyro.Config.Limits.StatsAlpha = new Object();
 	$.Pyro.Config.Limits.StatsAlpha.Min = 0.1;
@@ -35,5 +36,6 @@ $(function($){
 	$.Pyro.Config.Limits.StatsFontSize = new Object();
 	$.Pyro.Config.Limits.StatsFontSize.Min = 40;
 	$.Pyro.Config.Limits.StatsFontSize.Max = 150;
+	
 	
 });
