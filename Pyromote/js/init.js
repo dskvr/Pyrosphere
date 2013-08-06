@@ -99,6 +99,10 @@
 				
 				base.request = "";
 				
+				base.status = new Object();
+				base.status.idle = true;
+				base.status.active = false;
+				
 				base.$el.data("Pyro.Master", base);
 
 				//Load data into object.
@@ -107,6 +111,8 @@
 				base.gridInteraction = function(touch){
 					
 					var now = new Date().getTime();
+					
+					base.lastInteraction = now;
 					
 					base.current = {};
 					//
@@ -252,6 +258,21 @@
 							
 					base.$pointer.css('width', normal.width+'px').css('height', normal.height+'px')
 				}
+				
+				base.activated = function(){
+				}
+				
+				base.idleCheck = function(){
+					var now = new Date().getTime();
+					var diff = now - base.lastInteraction;
+					var isIdle = diff > $.Pyro.Config.Limits.IdleThreshold;
+					if(isIdle) 
+						{ base.status.idle = true; base.status.active = true; }
+					else 
+						{ base.status.idle = false; }
+						
+					if(diff > $.Pyro.Config.Limits.IdleThreshold*1.5) { base.status.active = false; }
+				}
 
         base.init = function(){
 					
@@ -302,16 +323,24 @@
 						
 					base.$grid
 						.bind('mousedown', function(event){
-							
-							$.playSound('sounds/welcome.wav');
+
+							// base.uiReset();
 							
 							base.mouseDown = true;
 							
-							$(this).trigger('mousemove');
-
-							base.$pointer
-								.stop()
-								.css({ top: event.pageY, left: event.pageX, opacity : 1 });
+							if(base.status.idle) { $.playSound('sounds/positive.wav'); base.status.idle = false; }
+							else { $.playSound('sounds/welcome.wav'); }
+							if(!base.status.active) { base.status.active = true; }
+								
+								if(typeof event.pageY != 'integer' ||typeof event.pagex != 'integer') return;
+							
+								base.$pointer.stop()
+								.css({ top: 0, left : 0});
+								// .css({ top: event.pageY, left: event.pageX, opacity : 1 });
+								
+							setTimeout(function(){
+								base.$pointer.css({ top: event.pageY, left: event.pageX, opacity : 1 });
+							}, 3);
 
 							var touch = new Object();
 									touch.y = event.pageY;
@@ -432,7 +461,7 @@
         frameInterval: 100,			// Time between frames
         patternInterval: 100,		//
         pattern: "00",					// This is the pattern ID.
-				persistence:false, 			// When the user let's go, it won't turn off.
+				persistence:true, 			// When the user let's go, it won't turn off.
 				refreshRate: 20,					// This is how fast it will send the server a request.
 				
 				//Interface Preferences

@@ -22,7 +22,8 @@ $(function($){
 	$.Pyro.Config.Limits.Duration = new Object();
 	$.Pyro.Config.Limits.Duration.Min = 40;
 	$.Pyro.Config.Limits.Duration.Max = 750;
-
+	
+	$.Pyro.Config.Limits.IdleThreshold = 60*1000; //sixty seconds.
 
 	//
 	// UI PREFERENCES
