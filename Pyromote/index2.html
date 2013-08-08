@@ -35,6 +35,10 @@
 				xy.status = new Object();
 				xy.sphere = $.pyrosphere();
 				
+				xy.transitions = new Array();
+				
+				xy.transitions = shuffle(xy.transitions);
+				
 				xy.update = function( pos, scope ){
 					
 					var $grid = $(this);
@@ -60,13 +64,34 @@
 					
 				}
 				
-				xy.action.change = function( post, event, scope ){
+				xy.action.setup = function( scope ){
+					var $grid = $(this);
+					
+					scope.transitions = [
+						{ left : scope.$pointer.width()*-1 }, //left
+						{ left : $(document).width() 			 }, //right
+						{ top : scope.$pointer.height()*-1  }, //up
+						{ top : $(document).height()       }, //down
+						{ left : scope.$pointer.width()*-1, top : scope.$pointer.height()*-1 }, //left up
+						{ left : scope.$pointer.width()*-1, top : $(document).height() }, //left down
+						{ left : $(document).width(), top : scope.$pointer.height()*-1 }, //right up
+						{ left : $(document).width(), top : $(document).height() } //right down
+					];
+					
+					$grid.data('Pyro.TouchGrid', scope);
+					
+					return true;
+				}
+				
+				xy.action.change = function( pos, event, scope ){
 					var size = new Object();
 							size.x = normalize(scope.status.value.x, 20, 750, 40, 200, true ); // between 40 and 200, round it
 							size.y = normalize(scope.status.value.y, 20, 750, 40, 200, true ); // ^
 							
 					scope.$stats.find('.x .value').css('font-size', size.x+'pt');
 					scope.$stats.find('.y .value').css('font-size', size.y+'pt');
+					
+					xy.sphere
 				}
 				
 				xy.action.normalize = function( pos, event, scope ) {
@@ -108,23 +133,56 @@
 		
 				xy.action.down = function( pos, event, scope ){ 
 					var $grid = $(this);	
+					scope.$pointer.css({ opacity : 1 });
+					
+					if(scope.status.idle) { $.playSound('sounds/positive.wav', 2000); base.status.idle = false; }
+					else { $.playSound('sounds/welcome.wav', 1000); }
 				}
 		
-				xy.action.up = function( pos, event, scope ){
+				xy.action.up = function( event, scope ){
 					var $grid = $(this);
+					
+					var rand = Math.round(Math.random() * (scope.transitions.length-1) );
+					
+					xy.action.setup.apply( this, [ scope ] );
+					
+					scope = $grid.data('Pyro.TouchGrid');
+					
+					if(!scope.options.hold) {
+						
+						var trans = scope.transitions[rand];
+								trans.easing = 'easeInExpo';
+								trans.opacity = 0;
+						// 							
+						// 							console.log(trans);
+						// 					
+								scope.$pointer.stop().animate(trans, 100, function(){
+											// scope.$pointer.css({ left : scope.$pointer.width()*-1, top : scope.$pointer.width()*-1 });
+								});
+						// 					
+						// $('.follower').fadeOut(100);
+						// sphere.pyrosphere('set', 'on', false);
+						// scope.options.active = false;
+					}
+					
+					return true; //RETURN TRUE! If not, default core functionality (HIDE) will take over. You'll get frustrated. Return true.
 				}
 				
-				xy.config = {
+				xy.gridconfig = {
 					labelX : 'Duration',
 					labelY : 'Interval',
+					// hold : true,
 					// useX : false,
 					pressmove : xy.action.move,
 					pressdown : xy.action.down,
 					pressup : xy.action.up,
 					alterValue : xy.action.normalize,
 					pointer : xy.action.pointer,
-					change : xy.action.change
+					change : xy.action.change,
+					setup : xy.action.setup
 				}
+				
+				xy.sessionconfig = {}
 			
 			var $xygrid = $('#grid').pyrogrid( xy.config );
 			
@@ -135,6 +193,8 @@
 		
 		var sliders = new Object();
 		var valves = new Object();
+		
+		
 		
 	</script>
 	

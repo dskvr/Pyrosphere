@@ -10,6 +10,8 @@
 		
 		$.Pyro.Sphere.Methods = new Object();
 		
+		$.Pyro.Sphere.Pointer = new Object();
+		
 		$.Pyro.Sphere.Methods.init = function( options ) {
 			
 			var scope = {};
@@ -77,9 +79,10 @@
 			var prefix = '';
 			
 			//What to do with them.
-			if(key == 'pattern') prefix += '!';
-			if(key == 'frameDuration') prefix += '@';
-			if(key == 'frameInterval') prefix += '#';
+			if(key == 'on') 						prefix != '*';
+			if(key == 'pattern') 				prefix += '!';
+			if(key == 'frameDuration') 	prefix += '@';
+			if(key == 'frameInterval') 	prefix += '#';
 			
 			scope.checkActivity();
 			

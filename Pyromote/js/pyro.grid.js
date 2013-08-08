@@ -13,6 +13,7 @@
 		
 		//Status
 		$.Pyro.TouchGrid.Status.Default = {
+			idle : true,
 			limits : {
 				refreshStats : 10,
 				refreshPointer : 0,
@@ -72,7 +73,6 @@
 						scope.id = Math.round(Math.random()*Math.random()/Math.random()*9999999);
 						scope.options = $.extend({}, $.Pyro.TouchGrid.defaultOptions, options);
 						scope.status = $.Pyro.TouchGrid.Status.Default;
-						scope.options.setup.apply( this , [ scope ] );
 						
 						$grid.data('Pyro.TouchGrid', scope);
 						
@@ -80,7 +80,8 @@
 						$.Pyro.TouchGrid.Bind.apply( this );
 						$.Pyro.TouchGrid.Placement.apply( this );
 						
-						
+						scope.options.setup.apply( this , [ scope ] );
+
 		}
 		
 		$.Pyro.TouchGrid.BreakIdle = function( pos, event, scope ){
@@ -136,15 +137,21 @@
 			return scope.status;
 		}
 	
-		// DOM
 	
+		// DOM
 		$.Pyro.TouchGrid.PointerUpdatePosition = function( pos , scope ){
 			var $grid = $(this);
 			scope.options.pointer.apply( this, [pos, scope] );			
 			if(scope.options.useX) scope.$pointer.css( { left : pos.x - (scope.$pointer.width()/2) } );
+			else 									 scope.$pointer.css( { left : ( $grid.width()/2 ) - ( scope.$pointer.width()/2 ) } );
 			if(scope.options.useY) scope.$pointer.css( { top : pos.y - (scope.$pointer.height()/2) } );
+			else 									 scope.$pointer.css( { top : ( $grid.height()/2 ) - ( scope.$pointer.height()/2 ) } );
 		}
 	
+		$.Pyro.TouchGrid.outOfBounds = function(pos, scope){
+			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left && scope.options.useX) return;
+			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top && scope.options.useY) return;
+		}
 		
 		//Trigger activity, initialize callbacks.
 		$.Pyro.TouchGrid.Events.MouseDown = function( event ){
@@ -165,19 +172,18 @@
 			
 			scope.options.pressdown.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
+			
+			scope.status.idle = false;
 		}
 		
-		$.Pyro.TouchGrid.outOfBounds = function(pos, scope){
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left && scope.options.useX) return;
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top && scope.options.useY) return;
-		}
-		
+	
 		$.Pyro.TouchGrid.Events.MouseUp = function( event ){
 			var scope = $(this).data('Pyro.TouchGrid');
-			scope.options.pressup.apply( this , [ event, scope ] );
 			
-			if(!scope.options.hold) {
-				scope.$pointer.hide();
+			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
+				if(!scope.options.hold) {
+					scope.$pointer.hide(); //Hide by default.
+				}
 			}
 			
 			scope.status.mousedown = false;
@@ -235,11 +241,9 @@
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
 			
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left && scope.options.useX) return;
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top && scope.options.useY) return;
+			if($.Pyro.TouchGrid.outOfBounds(pos, scope)) return;
 			
 			$.Pyro.TouchGrid.Status.Update.apply(this, [ pos, event, scope ]);
-			
 			scope.options.pressmove.apply( this , [pos, event, scope] );
 			scope.options.change.apply( this , [pos, event, scope] );
 			
@@ -336,6 +340,7 @@
 			
 			var $grid = $(this);
 			var scope = $grid.data('Pyro.TouchGrid');			
+
 					if(typeof scope.status == 'undefined') scope.status = new Object();
 					scope.status.placement = new Object();
 			
@@ -407,6 +412,8 @@
 			if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'bottom-half';
 			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'left-half';
 			if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'right-half';
+			
+			$(this).data('Pyro.TouchGrid', scope);
 			
 		}
 		
