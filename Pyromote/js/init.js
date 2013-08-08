@@ -80,60 +80,69 @@
 
     $.Pyro.UI.Master = function(el, options){
         var base = this;
-
+				var now = new Date().getTime();
+				//
         base.$el = $(el);
         base.el = el;
 
-				base.patterns = '#patterns';
-				base.$patterns = base.$el.find(base.patterns);
+					base.grid = '#grid';
+					base.$grid = base.$el.find(base.grid);
+				
+					base.menus = '.nav';
+					base.$menus = $(base.menus);
+					
+					base.pointer = '.pointer';
+					base.$pointer = base.$grid.find(base.pointer).filter(':first');					
 
-				//This contains selector the values.
-				base.grid = '#grid';
-				base.$grid = base.$el.find(base.grid);
+				base.current = new Object();//Placeholder for time differences
+								
+				base.since = new Object();//Values representing time pasts in various contexts
 				
-				//The X/Y location of this determines the value of frameDuration and frameInterval
-				base.pointer = '.pointer';
-				base.$pointer = base.$grid.find(base.pointer).filter(':first');
+				base.since.elapsed = 0;
 				
-				base.lastUpdate = new Date().getTime();
-				
-				base.request = "";
-				
-				base.status = new Object();
+				base.since.lastRefresh = now;
+				base.since.lastActivity = false;
+				base.since.lastUpdate = false;
+			
+				base.status = new Object();	//Representing various UI and Sphere States
 				base.status.idle = true;
 				base.status.active = false;
 				
-				base.$el.data("Pyro.Master", base);
-
-				//Load data into object.
+				base.mouseDown = false; //Interaction underway...
 				
+				base.request = ""; //Request for Pyro.Sphere
+				
+				base.$el.data("Pyro.Master", base); //data 
+				//Load data into object.
 				//Updates Parameters when user interacts with the grid.
 				base.gridInteraction = function(touch){
 					
 					var now = new Date().getTime();
 					
-					base.lastInteraction = now;
-					
-					base.current = {};
+					base.since.lastActivity = now;
 					//
-					base.current.dim = {};
+					base.updateStats();
+					base.updateFollowerLines(touch.x, touch.y);
+					base.pointerAlpha();
+					base.pointerDims();
+					base.valueFontSize();
+					//
+					base.current.dim = new Object();
 					base.current.dim.width = base.$pointer.width();
 					base.current.dim.height = base.$pointer.height();
 					
-					base.current.css = { left : touch.x - (base.current.dim.width/2), top : touch.y - (base.current.dim.height/2)}
-					
 					//Raw touch values, not normalized to ranges yet. Considering user preference.
-					base.current.oriented = {}
+					base.current.oriented = new Object();
 					base.current.oriented.duration = !base.options.invertAxis ? touch.x : touch.y;
 					base.current.oriented.interval = !base.options.invertAxis ? touch.y : touch.x;
 					
 					//Interfacing limits. Considering axis inversion, max width or height.
-					base.current.limits = {}
+					base.current.limits = new Object();
 					base.current.limits.duration = !base.options.invertAxis ? $(document).width() : $(document).height();
 					base.current.limits.interval = !base.options.invertAxis ? $(document).height() : $(document).width();
 					
 					//Max range value
-					base.current.normalized = {}
+					base.current.normalized = new Object();
 					base.current.normalized.duration = Math.round(normalize(base.current.oriented.duration, 0, base.current.limits.duration, $.Pyro.Config.Limits.Duration.Min, $.Pyro.Config.Limits.Duration.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
 					base.current.normalized.interval = Math.round(normalize(base.current.oriented.interval, 0, base.current.limits.interval, $.Pyro.Config.Limits.Interval.Min, $.Pyro.Config.Limits.Interval.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
 				
@@ -141,27 +150,19 @@
 					base.updateOptions('frameDuration', base.current.normalized.duration );
 					base.updateOptions('frameInterval', base.current.normalized.interval );
 					
-					base.updateStats();
-					
+					base.current.css = { left : touch.x - (base.current.dim.width/2), top : touch.y - (base.current.dim.height/2)}
 					base.$pointer.css(base.current.css);
 					
-					base.updateFollowerLines(touch.x, touch.y);
-					
-					base.pointerAlpha();
-					base.pointerDims();
-					base.valueFontSize();
-					
-					if(now - base.lastUpdate < base.options.refreshRate) return;
+					if(now - base.since.lastUpdate < base.options.refreshRate) return;
 					base.$el.data("Pyro.Master", base);
-					
 					// $.Pyro. 	.send($.Pyro.request);
 					// $.Pyro.requestReset();
 					// $.Pyro.debug();
 				}
 				
 				base.uiReset = function(){
-					base.$pointer.fadeIn();
-					
+					base.$pointer.show();
+					base.$pointer.css({left:0,top:0,opacity:1});
 				}
 
 				base.updateOptions = function(key, value){
@@ -215,6 +216,26 @@
  					base.request += prefix+(value)+'.';
 				}
 				
+				// base.warnIdle = function(){
+				// 				var now = new Date().getTime();
+				// 				var diff = now - base.since.lastActivity;
+				// 				if(diff > Math.floor($.Pyro.Config.Limits.IdleThreshold*0.75) ) {
+				// 					// base.intervals.timeUntilIdle = setInterval(function(){
+				// 							// $('#idle .timeUntilIdle').html(Math.ceil($.Pyro.Config.Limits.IdleThreshold-diff));
+				// 					// }, 1000);
+				// 				} else {
+				// 					// clearInterval(base.intervals.timeUntilIdle);
+				// 					// $('#idle .timeUntilIdle').fadeOu();
+				// 				}
+				// 			
+				// 			}
+				
+				base.goIdle = function(){
+					base.status.idle = true; 
+					base.status.active = false; 								
+					base.$grid.find('.axis').fadeOut();
+				}
+							
 				base.pointerAlpha = function(){
 					var average = (base.options.frameDuration + base.options.frameInterval) / 2;
 					var max = $(document).width() > $(document).height() ? $(document).width()  : $(document).height(); //Bigger of the two
@@ -225,7 +246,7 @@
 				}
 				
 				base.valueFontSize = function(){
-					var size = {};
+					var size = new Object();;
 							size.duration = normalize(base.options.frameDuration, 20, 750, 40, 200 );
 							size.interval = normalize(base.options.frameInterval, 20, 750, 40, 200 );
 							
@@ -248,43 +269,32 @@
 				}
 				
 				base.pointerDims = function(){
-					var raw = {}
+					var raw = new Object();
 							raw.width = (!base.options.invertAxis) ? base.options.frameInterval : base.options.frameDuration;
 							raw.height = (!base.options.invertAxis) ? base.options.frameDuration : base.options.frameInterval;
 							
-					var normal = {};
+					var normal = new Object();
 							normal.width = normalize(raw.width, 0, 750, 30, $(document).width()*2);
 							normal.height = normalize(raw.height, 0, 750, 30, $(document).height()*2);
 							
 					base.$pointer.css('width', normal.width+'px').css('height', normal.height+'px')
 				}
 				
-				base.activated = function(){
-				}
+				base.activated = function(){}
 				
 				base.idleCheck = function(){
 					var now = new Date().getTime();
-					var diff = now - base.lastInteraction;
+					var diff = now - base.since.lastActivity;
 					var isIdle = diff > $.Pyro.Config.Limits.IdleThreshold;
 					if(isIdle) 
-						{ base.status.idle = true; base.status.active = true; }
-					else 
-						{ base.status.idle = false; }
-						
-					if(diff > $.Pyro.Config.Limits.IdleThreshold*1.5) { base.status.active = false; }
+						{ base.goIdle(); }
+					// else 
+						// { base.status.idle = false; }
+					// if(diff > $.Pyro.Config.Limits.IdleThreshold*1.5) {  }
 				}
-
-        base.init = function(){
+				
+				base.bindTouch = function(){
 					
-          base.options = $.extend({},$.Pyro.UI.Master.defaultOptions, options);
-
-					base.setupFollowerLines();
-					
-					base.setupPointerTransitions();
-
-					// base.updateOptions('frameDuration', (!base.options.invertAxis ? touch.x : touch.y) );
-
-					//Bind Interactions to Grid
 					base.$grid
 						.bind('touchstart', function(event){
 							
@@ -312,65 +322,45 @@
 							if(!base.options.persistence) {
 								base.$pointer.fadeOut(fast);
 								base.$pointer.css({ left : 0, top : 0 });
-								base.options.active = false;
+								// base.options.active = false;
 								// $.Pyro.socket.send($.Pyro.request);
 								// $.Pyro.requestReset();
 							}
 						});
-						
-					base.mouseDown = false;
-					
-						
+				}
+
+				base.bindMouse = function(){
 					base.$grid
 						.bind('mousedown', function(event){
-
+							console.log('X: '+event.pageX+'    Y: '+event.pageY);
 							// base.uiReset();
+							base.uiReset();
 							
 							base.mouseDown = true;
-							
-							if(base.status.idle) { $.playSound('sounds/positive.wav'); base.status.idle = false; }
-							else { $.playSound('sounds/welcome.wav'); }
-							if(!base.status.active) { base.status.active = true; }
-								
-								if(typeof event.pageY != 'integer' ||typeof event.pagex != 'integer') return;
-							
-								base.$pointer.stop()
-								.css({ top: 0, left : 0});
-								// .css({ top: event.pageY, left: event.pageX, opacity : 1 });
-								
-							setTimeout(function(){
-								base.$pointer.css({ top: event.pageY, left: event.pageX, opacity : 1 });
-							}, 3);
+							base.status.active = true;
 
 							var touch = new Object();
 									touch.y = event.pageY;
 									touch.x = event.pageX;
 
 							base.gridInteraction(touch);
+							
+							if(base.status.idle) { $.playSound('sounds/positive.wav', 2000); base.status.idle = false; }
+							else { $.playSound('sounds/welcome.wav', 1000); }
+							
+
+							if(typeof event.pageY != 'integer' || typeof event.pageX != 'integer') return;
+						
+							base.$pointer.stop()
+								.css({ top: 0, left : 0}).css({ top: event.pageY, left: event.pageX, opacity : 1 });;
+							// .css({ top: event.pageY, left: event.pageX, opacity : 1 });
+							
 							// 	
 							// base.pointerRotate = typeof base.pointerRotate != 'undefined' ? base.pointerRotate+10 : 0;
 							// 					
 							// base.$pointer.find('.zero').css({
 							//                   transform: 'rotate(' + base.pointerRotate + 'deg)'
 							//               });
-
-						})
-						
-						.bind('mousemove', function(event){
-							
-							if(!base.mouseDown) return;
-
-							base.uiReset();
-
-							var touch = new Object();
-									touch.y = event.pageY;
-									touch.x = event.pageX;
-
-							base.gridInteraction(touch);
-							
-							base.$pointer.find('.zero').css({
-                  transform: 'rotate(' + base.pointerRotate + 'deg)'
-              });
 
 						})
 						
@@ -400,22 +390,63 @@
 								// $.Pyro.requestReset();
 							}
 							
+						})
+						
+						.bind('mousemove', function(event){
+							
+							base.current.mouse = base.current.mouse || new Object();
+							base.current.mouse.pos = base.current.mouse.pos || new Object();
+							base.current.mouse.pos.x = event.pageX;
+							base.current.mouse.pos.y = event.pageY;
+							
+							if(!base.mouseDown) return;
+
+							base.uiReset();
+
+							var touch = new Object();
+									touch.y = event.pageY || base.current.mouse.pos.y;
+									touch.x = event.pageX || base.current.mouse.pos.x;
+
+							base.gridInteraction(touch);
+							
+							base.$pointer.find('.zero').css({
+                  transform: 'rotate(' + base.pointerRotate + 'deg)'
+              });
+
 						});
+				}
+
+        base.init = function(){
+					
+          base.options = $.extend({},$.Pyro.UI.Master.defaultOptions, options);
+
+					base.setupFollowerLines();
+					
+					base.setupPointerTransitions();
+
+					// base.updateOptions('frameDuration', (!base.options.invertAxis ? touch.x : touch.y) );
+					
+					base.bindTouch();
+					base.bindMouse();
 						
 					setTimeout(function(){
 						$.Pyro.watcher = setInterval(function(){
 							base.$el.data("Pyro.Master");
+							
 							if(base.request.length) {
-								// $.Pyro.socket.send($.Pyro.request);
-								// $.Pyro.requestReset();	
-				
-								// console.log(base.options);
+								// $.Pyro.Socket.emit('pipe', base.request);
 								console.log('Request: '+base.request);
 								base.request = '';
-								base.$el.data("Pyro.Master", base);
+							} else {
 								base.idleCheck();
-								// $.Pyro.requestReset();	
 							}
+							
+							var now = new Date().getTime();
+							base.since.lastRefresh = now;
+							
+							if( now - base.since.lastActivity > $.Pyro.Config.ShowMenuAfter ) base.$menus.show();
+							else {	base.$menus.hide(); }
+							
 						}, base.options.refreshRate);
 				}, 1000);
 			
@@ -461,11 +492,11 @@
         frameInterval: 100,			// Time between frames
         patternInterval: 100,		//
         pattern: "00",					// This is the pattern ID.
-				persistence:true, 			// When the user let's go, it won't turn off.
+				persistence:false, 			// When the user let's go, it won't turn off.
 				refreshRate: 20,					// This is how fast it will send the server a request.
 				
 				//Interface Preferences
-				invertAxis: false,        //By default, x is frameDuration and y is frameInterval
+				invertAxis: true,        //By default, x is frameDuration and y is frameInterval
 				
 				callbacks: {
 					load : function(ui, sphere){ },
