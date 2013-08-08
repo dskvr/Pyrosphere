@@ -8,9 +8,19 @@
 (function($){
 
   $.extend({
-    playSound: function(){
-      return $("<embed src='"+arguments[0]+"' hidden='true' autostart='true' loop='false' class='playSound'>").appendTo('body');
+	
+    playSound: function( ){
+			
+			length = arguments[1] || 2000;
+			var id = 'sound-' + Math.round(Math.random()*Math.random()/Math.random()*100000);
+			console.log(id + '    ' + length);
+			setTimeout(function(){
+				$('#'+id).empty().remove();
+			},length);
+      return $("<embed src='"+arguments[0]+"' hidden='true' autostart='true' id="+id+" loop='false' class='playSound'>").appendTo('body');
+
     }
+
   });
 
 })(jQuery);
