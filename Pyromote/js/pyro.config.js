@@ -7,9 +7,12 @@
 $(function($){
 	
 	$.Pyro.Config = new Object();
+	
+	//Show menu after [one second]
+	$.Pyro.Config.ShowMenuAfter = 1000;
+	
 	$.Pyro.Config.Limits = new Object();
-
-
+	
 	//
 	// ACTIONABLE PARAMS
 	//
