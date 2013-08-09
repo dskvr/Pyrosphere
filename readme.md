@@ -28,10 +28,13 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 - Was coded with Tab Size set as 2... You will thank me later.
 
 # Todo 
-- Port code to be functional with 2013 shift registers.
+- Port code to be functional with 2013 shift registers. (Leif!!!)
 - Finish Progressive Mode.
 - Implement Progressive/Auto mode limits, so that if the sphere has been idle for more than .... 30 minutes? It just turns off until the remote is active again. 
 - Add a new variable "Loop interval" which is similar to 'Frame Interval' but adds a delay at the end of the animation for more interactive control (defaults to FrameInterval)
+- Create repositories for each component, include as submodules within this repo.
+- Create session manager for Pyrosphere to eliminate potential issues with multiple clients.
+- Get feedback from UI (This branch is not yet published! view demo.html for the Ported Prototype!)
 
 # Credits
 - Visionary: Erin Banwell

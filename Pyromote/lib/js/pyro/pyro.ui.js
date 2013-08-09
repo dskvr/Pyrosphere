@@ -55,8 +55,7 @@
 		});
 
 		$.Pyro.UI.doAction('updateOption', [
-			base.$grid,
-			$(this).
+			base.$grid
 			
 			// grid
 			// stat

@@ -172,5 +172,9 @@
 			}
 			
 		});
+		
+		Sphere = function(){
+			
+		}
     
 })(jQuery);

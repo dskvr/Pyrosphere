@@ -1,18 +1,20 @@
+
 (function($){
 	
     if(!$.Pyro){
         $.Pyro = new Object();
     };
     
-    $.Pyro.TouchGrid = new Object(),
-		$.Pyro.TouchGrid.Methods = new Object(); //UI.Methods placeholder
-		$.Pyro.TouchGrid.Events = new Object(); //UI.Methods placeholder
- 		$.Pyro.TouchGrid.Status = new Object(),
-		$.Pyro.TouchGrid.Pointer = new Object(),
-		$.Pyro.TouchGrid.Pointer.Methods = new Object();
+    $.Pyro.Grid = new Object(),
+		$.Pyro.Grid.Methods = new Object(); //UI.Methods placeholder
+		$.Pyro.Grid.Events = new Object(); //UI.Methods placeholder
+ 		$.Pyro.Grid.Status = new Object(),
+		$.Pyro.Grid.Pointer = new Object(),
+		$.Pyro.Grid.Pointer.Methods = new Object();
+		$.Pyro.Grid.Idle = new Object();
 		
 		//Status
-		$.Pyro.TouchGrid.Status.Default = {
+		$.Pyro.Grid.Status.Default = {
 			idle : true,
 			limits : {
 				refreshStats : 10,
@@ -27,16 +29,18 @@
 			},
 			elapsed : {
 				lastActivity : -1,
-				lastMove : -1
+				lastMove : 0
 			},
 			timestamp : {
 				lastActivity : -1,
-				lastMove : -1
+				lastMove : 0
 			}
 		}
 
 		// Options
-		$.Pyro.TouchGrid.defaultOptions = {
+		$.Pyro.Grid.defaultOptions = {
+			
+			$loop : false,
 			
 			hold : false,
 			invertAxis : false,
@@ -53,93 +57,153 @@
 			pressup : function( pos, event, scope ) {  },
 			pressmove : function( pos, event, scope ) {  },
 			//
-			firstActivity : function(){ },
-			breakIdle : function(){ },
+			firstActivity : function( pos, event, scope){ },
+			idleEnd : function(){ },
+			idleBegin : function(){ },
 			//
 		 	alterValue : function( pos, event, scope ){ return pos; },
 			//
 			pointer : function( $el ){  },
 			
 			//Return the scope with this, fragile callback. Be careful!
-			setup : function(scope){ $(this).data('Pyro.TouchGrid', scope) }
+			setup : function(scope){ $(this).data('Pyro.Grid', scope) }
 			
 		};	
 
     
-		$.Pyro.TouchGrid.Methods.init = function( options ){
+		$.Pyro.Grid.Methods.init = function( options ){
 				
 				var $grid = $(this);
 				var scope = new Object();
 						scope.id = Math.round(Math.random()*Math.random()/Math.random()*9999999);
-						scope.options = $.extend({}, $.Pyro.TouchGrid.defaultOptions, options);
-						scope.status = $.Pyro.TouchGrid.Status.Default;
+						scope.options = $.extend({}, $.Pyro.Grid.defaultOptions, options);
+
+						console.log(scope.options.$loop);
+
+						if(scope.options.$loop) { scope.$loop = scope.options.$loop; }
+						unset(scope.options.loop)
+
+						scope.status = $.Pyro.Grid.Status.Default;
 						
-						$grid.data('Pyro.TouchGrid', scope);
+						$grid.data('Pyro.Grid', scope);
 						
-						$.Pyro.TouchGrid.HTML.apply( this );
-						$.Pyro.TouchGrid.Bind.apply( this );
-						$.Pyro.TouchGrid.Placement.apply( this );
+						$.Pyro.Grid.HTML.apply( this );
+						$.Pyro.Grid.Bind.apply( this );
+						$.Pyro.Grid.Placement.apply( this );
+						$.Pyro.Grid.Idle.init.apply( this, [ scope ] );
 						
 						scope.options.setup.apply( this , [ scope ] );
 
 		}
 		
-		$.Pyro.TouchGrid.BreakIdle = function( pos, event, scope ){
+		$.Pyro.Grid.outOfBounds = function(pos, scope){
+			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left) return;
+			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top) return;
+		}
+		
+		$.Pyro.Grid.Idle.init = function( scope ){
+
+			console.log('Idle?!?!?!');
+			
+			var self = this;
+			
+			$grid.data('Pyro.Grid', scope);
+			
+			// intval = setInterval(function(){
+			// 				//If not already idle, and check idle returns true, begin idle.
+			// 				if( !scope.status.idle && $.Pyro.Grid.Idle.check.apply(self, [ scope ]) ) $.Pyro.Grid.Idle.begin.apply( this, [ scope ]);
+			// 				console.log( 'Idle: '+scope.status.idle; )
+			// 			}, 1000);
+			
+		}
+		
+		$.Pyro.Grid.Idle.end = function( pos, scope ){
 			
 			var $grid = $(this);
 			
 			scope.status.idle = false;
-			scope.options.breakIdle.apply( this, [pos, event, scope] );
+			var last = scope.timestamp.idleSince;
 			
-			$grid.data( 'Pyro.TouchGrid', scope );
+			var now = new Date().getTime();
+			
+			scope.timestamp.idleCache = {}
+			scope.timestamp.idleCache.begin = last;
+			scope.timestamp.idleCache.end = now;
+			
+			scope.timestamp.lastActivity = now;
+			
+			$grid.data( 'Pyro.Grid', scope );
+			
+			scope.options.idleEnd.apply( this, [pos, event, scope] );
+		}
+		
+		$.Pyro.Grid.Idle.begin = function( scope ){
+			
+			var $grid = $(this);
+			
+			scope.status.idle = true;
+			scope.timestamp.idleSince = new Date().getTime();
+			
+			$grid.data( 'Pyro.Grid', scope );
+			
+			scope.options.idleBegin.apply( this, [ scope ] );
 			
 		}
 		
+		$.Pyro.Grid.Idle.check = function( scope ){
+			
+			var since = new Date().getTime() - scope.timestamp.lastActivity;
+			var idle = since >= $.Pyro.Config.Limits.IdleThreshold;
+			scope.status.idle = idle;
+			$(this).data('Pyro.Grid', scope);
+			if(idle) return true;
+			
+		}
 		
 		//
 		//Status Manager
 		
-		$.Pyro.TouchGrid.Status.Update = function( pos, event, scope ){
+		$.Pyro.Grid.Status.Update = function( pos, event, scope ){
 
-			var scope = $(this).data('Pyro.TouchGrid');
+			var scope = $(this).data('Pyro.Grid');
 			
 			var now = new Date().getTime();
 			
-			scope.status.elapsed.lastActivity = now - scope.status.timestamp.lastActivity;
+			console.log(scope.status.timestamp.lastActivity < 0);
+			
+			if(scope.status.timestamp.lastActivity < 0) scope.options.firstActivity.apply( this, [ pos, event, scope ]);
+			
+			$.Pyro.Grid.Idle.end.apply( this, [pos, event, scope] );
+			
 			scope.status.timestamp.lastActivity = now;
+
 			scope.status.pos = pos;			
 			
-			// Be default it returns the X,Y positions to value.
-			// value is used for display, less arbitrary
 			scope.status.value = scope.options.alterValue.apply( this, [ pos, event, scope ] )
 			
-			// console.log(scope.status.value);
-			// Note! Use this callback to normalize these numbers to something useful :
-			
 			//Save status.
-			$(this).data('Pyro.TouchGrid', scope);
+			$(this).data('Pyro.Grid', scope);
 			
-			$.Pyro.TouchGrid.Status.HTML.apply( scope );
-			
-			$.Pyro.TouchGrid.PointerUpdatePosition.apply( this, [pos, scope] );
+			$.Pyro.Grid.Status.updateValues.apply( scope );
+			$.Pyro.Grid.Pointer.Methods.UpdatePosition.apply( this, [pos, scope] );
 				
 		}
 		
-		$.Pyro.TouchGrid.Status.HTML = function(){ 
+		$.Pyro.Grid.Status.updateValues = function(){ 
 			//this == scope
 			if(this.options.useX) this.$stats.find('.x .value').html( this.status.value.x );
 			if(this.options.useY) this.$stats.find('.y .value').html( this.status.value.y );
 		}
 		
-		$.Pyro.TouchGrid.Status.Get = function(){ 
+		$.Pyro.Grid.Status.Get = function(){ 
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');
+			var scope = $grid.data('Pyro.Grid');
 			return scope.status;
 		}
 	
 	
 		// DOM
-		$.Pyro.TouchGrid.PointerUpdatePosition = function( pos , scope ){
+		$.Pyro.Grid.Pointer.Methods.UpdatePosition = function( pos , scope ){
 			var $grid = $(this);
 			scope.options.pointer.apply( this, [pos, scope] );			
 			if(scope.options.useX) scope.$pointer.css( { left : pos.x - (scope.$pointer.width()/2) } );
@@ -147,28 +211,21 @@
 			if(scope.options.useY) scope.$pointer.css( { top : pos.y - (scope.$pointer.height()/2) } );
 			else 									 scope.$pointer.css( { top : ( $grid.height()/2 ) - ( scope.$pointer.height()/2 ) } );
 		}
-	
-		$.Pyro.TouchGrid.outOfBounds = function(pos, scope){
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left && scope.options.useX) return;
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top && scope.options.useY) return;
-		}
+		
 		
 		//Trigger activity, initialize callbacks.
-		$.Pyro.TouchGrid.Events.MouseDown = function( event ){
-			
-			var scope = $(this).data('Pyro.TouchGrid');			
+		$.Pyro.Grid.Events.MouseDown = function( event ){
+
+			var scope = $(this).data('Pyro.Grid');			
 			// console.log(scope);
 			var pos = { x: event.pageX, y: event.pageY };
 			
+			if($.Pyro.Grid.outOfBounds.apply( this, [pos, scope] )) return;
+			
 			scope.$pointer.show();
-			
 			scope.status.mousedown = true;
-			
-			if($.Pyro.TouchGrid.outOfBounds(pos, scope)) return;
-			
-			if(scope.status.idle) $.Pyro.TouchGrid.BreakIdle.apply( this, [pos, event, scope] );
 		
-			$.Pyro.TouchGrid.Status.Update.apply(this, [pos, event, scope]);
+			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
 			scope.options.pressdown.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
@@ -177,80 +234,72 @@
 		}
 		
 	
-		$.Pyro.TouchGrid.Events.MouseUp = function( event ){
-			var scope = $(this).data('Pyro.TouchGrid');
+		$.Pyro.Grid.Events.MouseUp = function( event ){
+			var scope = $(this).data('Pyro.Grid');
+			
+			if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
 			
 			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
 				if(!scope.options.hold) {
 					scope.$pointer.hide(); //Hide by default.
 				}
 			}
-			
+		
 			scope.status.mousedown = false;
-			$(this).data('Pyro.TouchGrid', scope);
+			
+			$(this).data('Pyro.Grid', scope);
 		}
 		
-		$.Pyro.TouchGrid.Events.MouseMove = function( event ){
-			var scope = $(this).data('Pyro.TouchGrid');
+		$.Pyro.Grid.Events.MouseMove = function( event ){
+			var scope = $(this).data('Pyro.Grid');
 			var pos = { x: event.pageX, y: event.pageY };
 			
 			if(scope.status.mousedown == false) return;
+			if($.Pyro.Grid.outOfBounds( pos, scope )) return;
 			
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left) return;
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top) return;
-			
-			$.Pyro.TouchGrid.Status.Update.apply(this, [pos, event, scope]);
+			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
 			scope.options.pressmove.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
 		}
 		
-		$.Pyro.TouchGrid.Events.TouchStart = function( event ){
+		$.Pyro.Grid.Events.TouchStart = function( event ){
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');
+			var scope = $grid.data('Pyro.Grid');
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
-			/*
-			//Support for multiple grids, nix possible bugs before they happen, test bounds.
-			*/
-			//Exceeds Grid's Horizontal Bounds
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left) return; 
-			//Exceeds Grid's Vertical Bounds
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top) return;
-			//
-			//Update the status object in the scope.
-			$.Pyro.TouchGrid.Status.Update.apply(this, [pos, event, scope]);
-			//
-			if(scope.status.idle) $.Pyro.TouchGrid.BreakIdle.apply( this, [pos, event, scope] );
-			//
+			
+			if($.Pyro.Grid.outOfBounds( pos, scope )) return;
+			
+			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
 			scope.options.pressdown.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
 		}
 		
-		$.Pyro.TouchGrid.Events.TouchEnd = function( event ){
+		$.Pyro.Grid.Events.TouchEnd = function( event ){
 			
-			var scope = $(this).data('Pyro.TouchGrid');
+			var scope = $(this).data('Pyro.Grid');
 			scope.options.pressup.apply( this , [pos, event , scope] );
 			
 		}
 		
-		$.Pyro.TouchGrid.Events.TouchMove = function( event ){
+		$.Pyro.Grid.Events.TouchMove = function( event ){
 			
-			var scope = $(this).data('Pyro.TouchGrid');
+			var scope = $(this).data('Pyro.Grid');
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
 			
-			if($.Pyro.TouchGrid.outOfBounds(pos, scope)) return;
+			if($.Pyro.Grid.outOfBounds(pos, scope)) return;
 			
-			$.Pyro.TouchGrid.Status.Update.apply(this, [ pos, event, scope ]);
+			$.Pyro.Grid.Status.Update.apply(this, [ pos, event, scope ]);
 			scope.options.pressmove.apply( this , [pos, event, scope] );
 			scope.options.change.apply( this , [pos, event, scope] );
 			
 		}
 		
 		// 
-		// $.Pyro.TouchGrid.Interact = function(){
+		// $.Pyro.Grid.Interact = function(){
 		// 	
 		// }
 		
@@ -258,10 +307,10 @@
 		// examples: 	$grid.pyrogrid('get', 'option', 'hold');
 		//						$grid.pyrogrid('get', 'scope');
 		
-		$.Pyro.TouchGrid.Methods.get = function(){
+		$.Pyro.Grid.Methods.get = function(){
 			
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');
+			var scope = $grid.data('Pyro.Grid');
 			
 			if(arguments[0] == 'scope') return scope;
 			
@@ -276,20 +325,20 @@
 		// examples: 	var gridstatus = $grid.pyrogrid('status');
 		//						$grid.pyrogrid('get', 'scope');
 				
-		$.Pyro.TouchGrid.Methods.status = function(){
+		$.Pyro.Grid.Methods.status = function(){
 	
-			return $.Pyro.TouchGrid.Status.Get.apply( this );
+			return $.Pyro.Grid.Status.Get.apply( this );
 
 		}
 		
-		$.Pyro.TouchGrid.Methods.scope = function(){
-			return $(this).data('Pyro.TouchGrid');
+		$.Pyro.Grid.Methods.scope = function(){
+			return $(this).data('Pyro.Grid');
 		}
 		
 		// examples: 	$grid.pyrogrid('updateOption', 'hold', true);
-		$.Pyro.TouchGrid.Methods.updateOption = function( key, newvalue ){
+		$.Pyro.Grid.Methods.updateOption = function( key, newvalue ){
 			
-			var scope = $(this).data('Pyro.TouchGrid');
+			var scope = $(this).data('Pyro.Grid');
 			if( !scope.options[key] ) return;
 			if( typeof scope.options[key] == 'object' && typeof newvalue != 'object' ) return; //JIC
 			return scope.options[key] = newvalue;
@@ -297,25 +346,25 @@
 		}
 		
 		
-		$.Pyro.TouchGrid.Bind = function(){
+		$.Pyro.Grid.Bind = function(){
 			
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');
+			var scope = $grid.data('Pyro.Grid');
 			
-			$grid.bind('mousedown', $.Pyro.TouchGrid.Events.MouseDown);
-			$grid.bind('mouseup', $.Pyro.TouchGrid.Events.MouseUp);
-			$grid.bind('mousemove', $.Pyro.TouchGrid.Events.MouseMove);
-			$grid.bind('touchstart', $.Pyro.TouchGrid.Events.TouchStart);
-			$grid.bind('touchend', $.Pyro.TouchGrid.Events.TouchEnd);
-			$grid.bind('touchmove', $.Pyro.TouchGrid.Events.TouchMove);
+			$grid.bind('mousedown', $.Pyro.Grid.Events.MouseDown);
+			$grid.bind('mouseup', $.Pyro.Grid.Events.MouseUp);
+			$grid.bind('mousemove', $.Pyro.Grid.Events.MouseMove);
+			$grid.bind('touchstart', $.Pyro.Grid.Events.TouchStart);
+			$grid.bind('touchend', $.Pyro.Grid.Events.TouchEnd);
+			$grid.bind('touchmove', $.Pyro.Grid.Events.TouchMove);
 			
 		}
 	
 		
-		$.Pyro.TouchGrid.HTML = function(){
+		$.Pyro.Grid.HTML = function(){
 			
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');
+			var scope = $grid.data('Pyro.Grid');
 					
 					$grid.attr('data-id', scope.id);
 			
@@ -332,17 +381,19 @@
 			if(scope.options.useX) var $x = $('<div>').appendTo(scope.$stats).addClass('x').html('<span class="key">'+scope.options.labelX+'</span><span class="value"></span>');
 			if(scope.options.useY) var $y = $('<div>').appendTo(scope.$stats).addClass('y').html('<span class="key">'+scope.options.labelY+'</span><span class="value"></span>');
 			
-			$grid.data('Pyro.TouchGrid', scope);
+			$grid.data('Pyro.Grid', scope);
 
 		}
 		
-		$.Pyro.TouchGrid.Placement = function(){
+		$.Pyro.Grid.Placement = function(){
 			
 			var $grid = $(this);
-			var scope = $grid.data('Pyro.TouchGrid');			
+			var scope = $grid.data('Pyro.Grid');			
 
-					if(typeof scope.status == 'undefined') scope.status = new Object();
-					scope.status.placement = new Object();
+			if(typeof scope.status == 'undefined') scope.status = new Object();
+			scope.status.placement = new Object();
+			scope.status.placement.vertical = new Object();
+			scope.status.placement.horizontal = new Object();
 			
 			var display = {
 				width : $(document).width(),
@@ -375,9 +426,8 @@
 				fourth : { width : grid.width*0.26, height : grid.height*0.26 }
 			}
 			
-			if(display.width == grid.width && display.height == grid.height) scope.status.placement.horizontal = 'whole';
 			
-			else if(offset.left == 0 && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'left-fourth';
+			if(offset.left == 0 && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'left-fourth';
 			else if(offset.left == 0 && grid.width < pie.third.width ) scope.status.placement.horizontal = 'left-third';
 			else if(offset.left == 0 && grid.width < pie.half.width )  scope.status.placement.horizontal = 'left-half';
 			
@@ -388,10 +438,10 @@
 			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.fourth.width) scope.status.placement.horizontal = 'middle-fourth';
 			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.third.width) scope.status.placement.horizontal = 'middle-third';
 			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.half.width) scope.status.placement.horizontal = 'middle-half';
+			scope.status.placement.horizontal = 'whole';
 			
-			if(display.height == grid.height && display.height == grid.height) scope.status.placement.vertical = 'whole';
+			if(offset.top == 0 && grid.height < pie.fourth.height ) scope.status.placement.vertical = 'top-fourth';
 			
-			else if(offset.top == 0 && grid.height < pie.fourth.height ) scope.status.placement.vertical = 'top-fourth';
 			else if(offset.top == 0 && grid.height < pie.third.height ) scope.status.placement.vertical = 'top-third';
 			else if(offset.top == 0 && grid.height < pie.half.height )  scope.status.placement.vertical = 'top-half';
 			
@@ -402,6 +452,7 @@
 			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.fourth.height) scope.status.placement.vertical = 'middle-fourth';
 			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.third.height) scope.status.placement.vertical = 'middle-third';
 			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.half.height) scope.status.placement.vertical = 'middle-half';
+			else scope.status.placement.vertical = 'whole';
 			
 			if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'whole';
 			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'left-top-quarter';
@@ -413,13 +464,13 @@
 			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'left-half';
 			if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'right-half';
 			
-			$(this).data('Pyro.TouchGrid', scope);
+			$(this).data('Pyro.Grid', scope);
 			
 		}
 		
-		$.Pyro.TouchGrid.UI = new Object(); 				//UI placeholde
+		$.Pyro.Grid.UI = new Object(); 				//UI placeholde
 
-		// $.Pyro.TouchGrid.UI.Methods.updateStats = function( scope ){
+		// $.Pyro.Grid.UI.Methods.updateStats = function( scope ){
 					
 		
 
@@ -429,11 +480,11 @@
 		//Mouse
 		
 		
-		// $.Pyro.TouchGrid.Status.Mouse = new Object();
+		// $.Pyro.Grid.Status.Mouse = new Object();
     
 		$.fn.pyrogrid = function( method ){
 
-			var methods = $.Pyro.TouchGrid.Methods;
+			var methods = $.Pyro.Grid.Methods;
 
 			if ( methods[method] ) {
 		    return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));

@@ -1,21 +1,16 @@
 (function($){
 	$.Pyro = new Object();
 	
-	$Pyro.Sphere, $Pyro.UI = {};
+	$.Pyro.Sphere, $.Pyro.UI = {};
 	
 	$.Pyro.UI.Master, $.Pyro.UI.Grid, $.Pyro.UI.Valves
 	
 	$.Pyro.watcher = null; //Placeholder for interval.
 	
-	$.Pyro.session = function(){
-		
-	}
+	$.Pyro.session = function(){}
 	
-	//Socket.
-	if(socket) $.Pyro.socket = socket;
-	
-	//Namespace vars
-	base.request = "";
+	//Socket. (emit,send,recieve)
+	if(socket) $.Pyro.Socket = socket;
 	
 	//Namespace helpers
 	$.Pyro.requestReset = function(){
@@ -24,7 +19,7 @@
 	}
 	
 	$.Pyro.debug = function(){
-		console.log('Request: '+$.Pyro.request);
+		console.log('RRRRRequest: '+$.Pyro.request);
 	}
 	
 });
