@@ -322,11 +322,12 @@ void loop()
 	//
 	flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
 	//
-	modeSelektor();					// Select mode based on information.
+	nextFrame();					// Select mode based on information.
 	//
 	serialPolling();				// Check for last CMD
 	//
   ignite();       				// Send the 1011 and let the people have some fun.
+
 	//We are polling the serial connection.
 	while(Serial.available() > 0) {
     char x = Serial.read();
@@ -411,29 +412,25 @@ void serialPolling(){
  * Checks for last successful serial request.
  *************************************************************************************/
 
-void modeSelektor(){
+void nextFrame(){
 	long since = now - then;
 	if(since > frameInterval || since > maxFrameInterval){  
 	  // Go to next frame
-		nextFrame();
+		if(updateFrame()){
+			
+	    if(loopCount > loopThresh){
+	      if(autoPilot){
+					// if 				(controlMode == '0') 	randomAnimation();
+					// else if 	(controlMode == '1') 	progressiveAnimation();
+					goGoAutoPilot();
+	      }
+	      loopCount = 0;
+	    } else {
+	      loopCount++;
+	    }
+
+	  }
 	}
-}
-
-
-void nextFrame(){
-	if(updateFrame()){
-    if(loopCount > loopThresh){
-      if(autoPilot){
-				// if 				(controlMode == '0') 	randomAnimation();
-				// else if 	(controlMode == '1') 	progressiveAnimation();
-				autopilot();
-      }
-      loopCount = 0;
-    } else {
-      loopCount++;
-    }
-
-  }
   then = now;
 }
 
@@ -443,6 +440,7 @@ void nextFrame(){
  *************************************************************************************/
 
 void flameSustain(){
+	
 	//Check for length the
   for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
 		long onFor = now - nodeTimeStamps[i];
@@ -452,6 +450,7 @@ void flameSustain(){
       }
     }
   }
+
 }
 
 /*
