@@ -34,7 +34,8 @@
 			timestamp : {
 				lastActivity : -1,
 				lastMove : 0
-			}
+			},
+			$loop : false
 		}
 
 		// Options
@@ -71,29 +72,41 @@
 		};	
 
     
-		$.Pyro.Grid.Methods.init = function( options, scope){
-				
-				var $grid = $(this);
-				var scope = scope || new Object();
-						scope.id = Math.round(Math.random()*Math.random()/Math.random()*9999999);
-						scope.options = $.extend({}, $.Pyro.Grid.defaultOptions, options);
+		$.Pyro.Grid.Methods.init = function( options, scope ){
+			
+			this.each(function(){
+					var $grid = $(this);
+					var scope = scope || new Object();
+							scope.id = Math.round(Math.random()*Math.random()/Math.random()*9999999);
+							scope.options = $.extend({}, $.Pyro.Grid.defaultOptions, options);
 
-						scope.status = scope.status || $.Pyro.Grid.Status.Default;
-						
-						$grid.data('Pyro.Grid', scope);
-						
-						$.Pyro.Grid.HTML.apply( this );
-						$.Pyro.Grid.Bind.apply( this );
-						$.Pyro.Grid.Placement.apply( this );
-						$.Pyro.Grid.Idle.init.apply( this, [ scope ] );
-						
-						scope.options.setup.apply( this , [ scope ] );
+							scope.status = scope.status || $.Pyro.Grid.Status.Default;
+
+							$grid.data('Pyro.Grid', scope);
+
+							$.Pyro.Grid.HTML.apply( this );
+							$.Pyro.Grid.Bind.apply( this );
+							$.Pyro.Grid.Placement.apply( this );
+							$.Pyro.Grid.Idle.init.apply( this );						
+							scope.options.setup.apply( this , [ scope ] );
+			});
+			
+			return this;
 
 		}
 		
-		$.Pyro.Grid.outOfBounds = function(pos, scope){
-			if(pos.x > scope.status.offset.right || pos.x < scope.status.offset.left) return;
-			if(pos.y > scope.status.offset.bottom || pos.y < scope.status.offset.top) return;
+		$.Pyro.Grid.inBounds = function(pos, scope){
+			
+			var boundsX = pos.x < scope.status.offset.right && pos.x > scope.status.offset.left;
+			var boundsY = pos.y < scope.status.offset.bottom && pos.y > scope.status.offset.top;
+			
+			// console.log(pos);
+			// console.log(scope.status.offset);
+			// console.log(scope.id + '  inBounds Horizontally: ' + boundsX + ' inBounds Vertically: ' + boundsY);
+			// console.log( scope.id + (boundsX && boundsY ? 'In Bounds' : 'Out of Bounds') );
+			
+			return boundsX && boundsY;
+			// console.log('Grid '+scope.id+' clicked, in bounds!');
 		}
 		
 		//
@@ -117,12 +130,12 @@
 			//Save status.
 			$(this).data('Pyro.Grid', scope);
 			
-			$.Pyro.Grid.Status.updateValues.apply( scope );
-			$.Pyro.Grid.Pointer.Methods.UpdatePosition.apply( this, [pos, scope] );
+			$.Pyro.Grid.Status.updateLabels.apply( scope );
+			$.Pyro.Grid.Pointer.Methods.updatePosition.apply( this, [pos, scope] );
 				
 		}
 		
-		$.Pyro.Grid.Status.updateValues = function(){ 
+		$.Pyro.Grid.Status.updateLabels = function(){ 
 			//this == scope
 			if(this.options.useX) this.$stats.find('.x .value').html( this.status.value.x );
 			if(this.options.useY) this.$stats.find('.y .value').html( this.status.value.y );
@@ -136,8 +149,9 @@
 	
 	
 		// DOM
-		$.Pyro.Grid.Pointer.Methods.UpdatePosition = function( pos , scope ){
+		$.Pyro.Grid.Pointer.Methods.updatePosition = function( pos , scope ){
 			var $grid = $(this);
+			// console.log(scope.id + ' pos: '+ pos);
 			scope.options.pointer.apply( this, [pos, scope] );			
 			if(scope.options.useX) scope.$pointer.css( { left : pos.x - (scope.$pointer.width()/2) } );
 			else 									 scope.$pointer.css( { left : ( $grid.width()/2 ) - ( scope.$pointer.width()/2 ) } );
@@ -150,20 +164,23 @@
 		$.Pyro.Grid.Events.MouseDown = function( event ){
 
 			var scope = $(this).data('Pyro.Grid');			
-			// console.log(scope);
-			var pos = { x: event.pageX, y: event.pageY };
+		
+			var pos = { x: event.pageX, y: event.pageY };		
 			
-			if($.Pyro.Grid.outOfBounds.apply( this, [pos, scope] )) return;
+			scope.options.pressdown.apply( this , [pos, event , scope] );
+	
+			// if(!$.Pyro.Grid.inBounds.apply( this, [pos, scope] )) return;
 			
 			scope.$pointer.show();
 			scope.status.mousedown = true;
 		
 			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
-			scope.options.pressdown.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
 			
 			scope.status.idle = false;
+			
+			return true;
 		}
 		
 	
@@ -181,6 +198,8 @@
 			scope.status.mousedown = false;
 			
 			$(this).data('Pyro.Grid', scope);
+			
+				return true;
 		}
 		
 		$.Pyro.Grid.Events.MouseMove = function( event ){
@@ -188,12 +207,14 @@
 			var pos = { x: event.pageX, y: event.pageY };
 			
 			if(scope.status.mousedown == false) return;
-			if($.Pyro.Grid.outOfBounds( pos, scope )) return;
+			// if(!$.Pyro.Grid.inBounds.apply( this, [pos, scope] )) return;
 			
 			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
 			scope.options.pressmove.apply( this , [pos, event , scope] );
 			scope.options.change.apply( this , [pos, event , scope] );
+			
+				return true;
 		}
 		
 		$.Pyro.Grid.Events.TouchStart = function( event ){
@@ -202,7 +223,7 @@
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
 			
-			if($.Pyro.Grid.outOfBounds( pos, scope )) return;
+			// if(!$.Pyro.Grid.inBounds.apply( this, [pos, scope] )) return;
 			
 			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
 			
@@ -223,7 +244,7 @@
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
 			
-			if($.Pyro.Grid.outOfBounds(pos, scope)) return;
+			// if(!$.Pyro.Grid.inBounds.apply( this, [pos, scope] )) return;
 			
 			$.Pyro.Grid.Status.Update.apply(this, [ pos, event, scope ]);
 			scope.options.pressmove.apply( this , [pos, event, scope] );
@@ -285,14 +306,25 @@
 			
 			var self = this;
 			var $grid = $(this);
+			var scope = $grid.data('Pyro.Grid');
 			
 			$grid.data('Pyro.Grid', scope);
 			
-			$.Pyro.Grid.Idle.activeInterval = setInterval(function(){
-				//If not already idle, and check idle returns true, begin idle.
-				if( !scope.status.idle && $.Pyro.Grid.Idle.check.apply(self, [ scope ]) ) $.Pyro.Grid.Idle.begin.apply( this, [ scope ]);
-				console.log( 'Idle: '+scope.status.idle );
-			}, 5000);
+			if(scope.options.$loop) {
+				scope.options.$loop.pyroloop('addAction', 'checkIdle', function(){
+					var scope = $grid.data('Pyro.Grid');
+					if( !scope.status.idle && $.Pyro.Grid.Idle.check.apply(self, [ scope ]) ) $.Pyro.Grid.Idle.begin.apply( this, [ scope ]);
+					console.log( 'Idle: '+scope.status.idle );
+				}, 1000);
+			}
+			else {
+				$.Pyro.Grid.Idle.activeInterval = actions(function(){
+					var scope = $grid.data('Pyro.Grid');
+					//If not already idle, and check idle returns true, begin idle.
+					if( !scope.status.idle && $.Pyro.Grid.Idle.check.apply(self, [ scope ]) ) $.Pyro.Grid.Idle.begin.apply( this, [ scope ]);
+					console.log( 'Idle: '+scope.status.idle );
+				}, 5000);
+			}
 			
 		}
 		
@@ -359,7 +391,8 @@
 					
 					$grid
 							.addClass('grid')
-							.attr('data-id', scope.id);
+							.attr('data-id', scope.id)
+							.prepend('&nbsp;');
 			
 			var $pointer = $('<div>').appendTo($grid);
 					$pointer.addClass('pointer');
@@ -395,9 +428,9 @@
 				height : $(document).height()
 			}
 			
-			var offset = {
-				left : $grid.offset().left,
-				top : $grid.offset().top
+			scope.status.offset = {
+				left : Math.round($grid.offset().left),
+				top : Math.round($grid.offset().top)
 			}
 			
 			var grid = {
@@ -405,61 +438,64 @@
 				height : $grid.outerHeight()
 			}
 			
-			offset.right = offset.left + grid.width;
-			offset.bottom = offset.top + grid.height;
+			scope.status.offset.right = Math.round(scope.status.offset.left + grid.width);
+			scope.status.offset.bottom = Math.round(scope.status.offset.top + grid.height);
 			
-			scope.status.offset = offset;
+			// scope.status.offset = offset;
 			scope.status.dims = new Object();
 			scope.status.dims.grid = grid;
 			scope.status.dims.display = display;
+			
+			$grid.data('Pyro.Grid', scope);
+			
+			console.log();
 			// scope.status.dims.pointer = display;
 			
-			//Holds some math to determine fractional ownership over screenspace.
-			var pie = {
-				half : { width : grid.width*0.51, height : grid.height*0.51 },
-				third : { width : grid.width*0.34, height : grid.height*0.34 },
-				fourth : { width : grid.width*0.26, height : grid.height*0.26 }
-			}
-			
-			
-			if(offset.left == 0 && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'left-fourth';
-			else if(offset.left == 0 && grid.width < pie.third.width ) scope.status.placement.horizontal = 'left-third';
-			else if(offset.left == 0 && grid.width < pie.half.width )  scope.status.placement.horizontal = 'left-half';
-			
-			else if(offset.right == 0 && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'right-fourth';
-			else if(offset.right == 0 && grid.width < pie.third.width ) scope.status.placement.horizontal = 'right-third';
-			else if(offset.right == 0 && grid.width < pie.half.width )  scope.status.placement.horizontal = 'right-half';
-			
-			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.fourth.width) scope.status.placement.horizontal = 'middle-fourth';
-			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.third.width) scope.status.placement.horizontal = 'middle-third';
-			else if(offset.right != 0 && offset.left != 0 && grid.width < pie.half.width) scope.status.placement.horizontal = 'middle-half';
-			scope.status.placement.horizontal = 'whole';
-			
-			if(offset.top == 0 && grid.height < pie.fourth.height ) scope.status.placement.vertical = 'top-fourth';
-			
-			else if(offset.top == 0 && grid.height < pie.third.height ) scope.status.placement.vertical = 'top-third';
-			else if(offset.top == 0 && grid.height < pie.half.height )  scope.status.placement.vertical = 'top-half';
-			
-			else if(offset.bottom == 0 && grid.height < pie.fourth.height ) scope.status.placement.vertical = 'bottom-fourth';
-			else if(offset.bottom == 0 && grid.height < pie.third.height ) scope.status.placement.vertical = 'bottom-third';
-			else if(offset.bottom == 0 && grid.height < pie.half.height )  scope.status.placement.vertical = 'bottom-half';
-			
-			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.fourth.height) scope.status.placement.vertical = 'middle-fourth';
-			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.third.height) scope.status.placement.vertical = 'middle-third';
-			else if(offset.bottom != 0 && offset.top != 0 && grid.height < pie.half.height) scope.status.placement.vertical = 'middle-half';
-			else scope.status.placement.vertical = 'whole';
-			
-			if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'whole';
-			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'left-top-quarter';
-			if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'right-top-quarter';
-			if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'right-bottom-quarter';
-			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'left-bottom-quarter';
-			if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'top-half';
-			if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'bottom-half';
-			if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'left-half';
-			if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'right-half';
-			
-			$(this).data('Pyro.Grid', scope);
+			// //Holds some math to determine fractional ownership over screenspace.
+			// 		var pie = {
+			// 			half : { width : display.width*0.51, height : display.height*0.51 },
+			// 			third : { width : display.width*0.34, height : display.height*0.34 },
+			// 			fourth : { width : display.width*0.26, height : display.height*0.26 }
+			// 		}
+			// 		
+			// 		if(offset.left == 0 && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'left-fourth';
+			// 		else if(offset.left == 0 && grid.width < pie.third.width ) scope.status.placement.horizontal = 'left-third';
+			// 		else if(offset.left == 0 && grid.width < pie.half.width )  scope.status.placement.horizontal = 'left-half';
+			// 		
+			// 		else if(offset.right == display.width && grid.width < pie.fourth.width ) scope.status.placement.horizontal = 'right-fourth';
+			// 		else if(offset.right == display.width && grid.width < pie.third.width ) scope.status.placement.horizontal = 'right-third';
+			// 		else if(offset.right == display.width && grid.width < pie.half.width )  scope.status.placement.horizontal = 'right-half';
+			// 		
+			// 		else if(offset.right != display.width && offset.left != 0 && grid.width < pie.fourth.width) scope.status.placement.horizontal = 'middle-fourth';
+			// 		else if(offset.right != display.width && offset.left != 0 && grid.width < pie.third.width) scope.status.placement.horizontal = 'middle-third';
+			// 		else if(offset.right != display.width && offset.left != 0 && grid.width < pie.half.width) scope.status.placement.horizontal = 'middle-half';
+			// 		scope.status.placement.horizontal = 'whole';
+			// 		
+			// 		if(offset.top == 0 && grid.height < pie.fourth.height ) scope.status.placement.vertical = 'top-fourth';
+			// 		
+			// 		else if(offset.top == 0 && grid.height < pie.third.height ) scope.status.placement.vertical = 'top-third';
+			// 		else if(offset.top == 0 && grid.height < pie.half.height )  scope.status.placement.vertical = 'top-half';
+			// 		
+			// 		else if(offset.bottom == display.height && display.height < pie.fourth.height ) scope.status.placement.vertical = 'bottom-fourth';
+			// 		else if(offset.bottom == display.height && display.height < pie.third.height ) scope.status.placement.vertical = 'bottom-third';
+			// 		else if(offset.bottom == display.height && display.height < pie.half.height )  scope.status.placement.vertical = 'bottom-half';
+			// 		
+			// 		else if(offset.bottom != display.height && offset.top != 0 && grid.height < pie.fourth.height) scope.status.placement.vertical = 'middle-fourth';
+			// 		else if(offset.bottom != display.height && offset.top != 0 && grid.height < pie.third.height) scope.status.placement.vertical = 'middle-third';
+			// 		else if(offset.bottom != display.height && offset.top != 0 && grid.height < pie.half.height) scope.status.placement.vertical = 'middle-half';
+			// 		else scope.status.placement.vertical = 'whole';
+			// 		
+			// 		if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'whole';
+			// 		if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'left-top-quarter';
+			// 		if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'right-top-quarter';
+			// 		if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'right-bottom-quarter';
+			// 		if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'left-bottom-quarter';
+			// 		if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'top-half' ) scope.status.placement.macro = 'top-half';
+			// 		if( scope.status.placement.horizontal == 'whole' && scope.status.placement.vertical == 'bottom-half' ) scope.status.placement.macro = 'bottom-half';
+			// 		if( scope.status.placement.horizontal == 'left-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'left-half';
+			// 		if( scope.status.placement.horizontal == 'right-half' && scope.status.placement.vertical == 'whole' ) scope.status.placement.macro = 'right-half';
+			// 		
+			// 		$(this).data('Pyro.Grid', scope);
 			
 		}
 		

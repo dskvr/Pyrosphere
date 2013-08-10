@@ -6,7 +6,16 @@
 
 		$.Pyro.Sphere = new Object();
 		
-		$.Pyro.Sphere.defaultOptions = { $grid : false, refreshRate : 20 };
+		$.Pyro.Sphere.defaultOptions = { 
+			refreshRate : 20,
+			frameInterval : 400,
+			frameDuration : 400,
+			pattern : '00',
+			active : 0,
+			//
+			$grid : false, 
+			$loop : false
+		};
 		
 		$.Pyro.Sphere.Methods = new Object();
 		
@@ -20,18 +29,12 @@
 				
 			scope.request = '';
 			
-			scope.options = {
-				frameInterval : 400,
-				frameDuration : 400,
-				pattern : '00'
-			}
-			
 			scope.status =  {
 				lastRequest : -1,
 				totalRequests : 0,
 			};
 
-			if(!scope.options.$grid) return;
+			// if(!scope.options.$grid) return;
 			
 			$(this).data('Pyro.Sphere', scope);
 			
@@ -42,31 +45,36 @@
 		
 		//
 		$.Pyro.Sphere.Methods.set = function( key, value ){
-			
-			var scope = $(this).data('Pyro.Sphere');		
-			if(!scope[key]) return; 
-			scope[key] = value;
-			
+			var scope = $(this).data('Pyro.Sphere');
+			scope.options[key] = value;
+			$(this).data('Pyro.Sphere', scope);
 			$.Pyro.Sphere.Buffer.apply( this, [ key, value ]);
 			
 			return true;
 		}
 		
+		$.Pyro.Sphere.Methods.get = function( key ){
+			var scope = $(this).data('Pyro.Sphere');
+			return scope.options[key];
+		}
+		
 		//
-		$.Pyro.Sphere.ProcessBuffer = function( forceSend ){
+		$.Pyro.Sphere.Methods.process = function( forceSend ){
 			
 			var now = new Date().getTime();
+			var scope = $(this).data('Pyro.Sphere');
+			
 			scope.status.totalRequests++;
 			
 			if(now - scope.status.lastRequest < scope.options.refreshRate && !forceSend) return; //Useful for mouseup.
 			
-			$.Pyro.Sphere.sendBuffer( scope );
+			console.log(scope.request);
 			
 			scope.status.lastRequest = now;
+			// $.Pyro.Socket.emit('pipe', scope.request);
 			
-			$.Pyro.Socket.emit('pipe', scope.request);
 			scope.request = "";
-			scope.data('Pyro.Sphere', scope);
+			$(this).data('Pyro.Sphere', scope);
 			
 		}
 		
@@ -79,14 +87,16 @@
 			var prefix = '';
 			
 			//What to do with them.
-			if(key == 'on') 						prefix != '*';
+			if(key == 'active') 				prefix += '*';
 			if(key == 'pattern') 				prefix += '!';
 			if(key == 'frameDuration') 	prefix += '@';
 			if(key == 'frameInterval') 	prefix += '#';
 			
-			scope.checkActivity();
+			// scope.checkActivity();
 			
 			scope.request += prefix+(value)+'.';
+			
+			 $(this).data('Pyro.Sphere', scope);
 			
 		}
 		
@@ -111,26 +121,26 @@
 		$.Pyro.Sphere.send = function( request ) {
 			var scope = $(this).data('Pyro.Sphere');
 			//Make sure this is properly formatted!
-			$.Pyro.Socket.emit('pipe', request);
+			// $.Pyro.Socket.emit('pipe', request);
 		}
 		
 		//Helpers
 		$.Pyro.Sphere.updateInterval = function(interval){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			$.Pyro.Socket.emit('pipe', '#'+interval+'.');
+			// $.Pyro.Socket.emit('pipe', '#'+interval+'.');
 		}
 		
 		$.Pyro.Sphere.updateDuration = function(duration){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			$.Pyro.Socket.emit('pipe', '@'+duration+'.');
+			// $.Pyro.Socket.emit('pipe', '@'+duration+'.');
 		}
 		
 		$.Pyro.Sphere.updatePattern = function(pattern){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			$.Pyro.Socket.emit('pipe', '!'+pattern+'.');
+			// $.Pyro.Socket.emit('pipe', '!'+pattern+'.');
 		}
 		
 		// Generic Send, formatted string.
@@ -157,9 +167,7 @@
 			
     };
 
-		$.extend({
-
-	    pyrosphere: function( method ){
+		$.fn.pyrosphere = function( method ){
 				var methods = $.Pyro.Sphere.Methods;
 
 				if ( methods[method] ) {
@@ -169,12 +177,7 @@
 		    } else {
 		      $.error( 'Method ' +  method + ' does not exist on jQuery.pyrosphere ');
 		    }
-			}
-			
-		});
-		
-		Sphere = function(){
 			
 		}
-    
+			
 })(jQuery);

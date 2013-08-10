@@ -17,7 +17,9 @@
 		onready : function( scope ){ },
 		onselect : function( scope, event ){  },
 		onnext : function( scope, event ){  },
-		onprev : function( scope, event ){  }
+		onprev : function( scope, event ){  },
+		
+		$loop : false
 	}
 	
 	$.Pyro.Queue.Methods.init = function( options , data ){
@@ -105,17 +107,32 @@
 		
 				var refresh = scope.options.queueTimeout;
 		
-				clearInterval(scope.queue.interval);
-				scope.queue.interval = setInterval(function(){
+				if(scope.options.$loop) {
 					
-					var scope = $container.data('Pyro.Queue');
-					var random = scope.options.queueShuffle;
-					
-					if(random) scope.$container.find('li:random').click();
-					else scope.toggles.$next.click();
-					
-				}, refresh)
+					scope.options.$loop.pyroloop('removeAction', 'patternQueue');
+					scope.options.$loop.pyroloop('addAction', 'patternQueue', function(){
+						
+						var scope = $container.data('Pyro.Queue');
+						var random = scope.options.queueShuffle;
 
+						if(random) scope.$container.find('li:random').click();
+						else scope.toggles.$next.click();
+						console.log('executing within $pyroloop');
+					}, refresh);
+					
+				} else {
+					clearInterval(scope.queue.interval);
+					scope.queue.interval = setInterval(function(){
+
+						var scope = $container.data('Pyro.Queue');
+						var random = scope.options.queueShuffle;
+
+						if(random) scope.$container.find('li:random').click();
+						else scope.toggles.$next.click();
+
+					}, refresh)
+				}
+		
 				scope.queue.status = true;
 				scope.toggles.$playqueue.addClass('active');
 				
@@ -128,7 +145,8 @@
 		var $container = $trigger.parents('.selector');
 		var scope = $container.data('Pyro.Queue');
 		
-		clearInterval(scope.queue.interval)
+		if(scope.options.$loop) scope.options.$loop.pyroloop('removeAction', 'patternQueue');
+		else clearInterval(scope.queue.interval);
 		
 		scope.queue.status = false;
 		
