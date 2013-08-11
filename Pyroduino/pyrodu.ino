@@ -12,6 +12,13 @@
 #define 		TOTAL_REGISTERS 			12 // Total registers (chips, bytes) being talked to
 #define 		TOTAL_NODES 					96 // 0 -  85 makes 86 nodes
 #define 		FILE_NAME_SIZE 				12 // 8.3 filenames need 12 char to define them
+
+// Interval Limits
+long 				MIN_FRAME_INTERVAL 					= 35;
+long 				MAX_FRAME_INTERVAL 					= 10000;
+// Duration Limits
+long 				MIN_FRAME_DURATION 					=	10;
+long 				MAX_FRAME_DURATION 					=	750;
 //Holds the current frame? ...Don't think this is used anywhere. 
 typedef struct _frame {
   int8_t frameChunk[TOTAL_REGISTERS];
@@ -36,12 +43,7 @@ char 				currentFile[FILE_NAME_SIZE]; 						 // The current animation file we're
 long 				nodeTimeStamps[TOTAL_NODES]; 						 // Since defining arrays requires you put in the total number of elements, add 1
 long 				frameInterval 				= 20;             // Interval between frames
 long 				frameDuration 				=	400;              // Time a given  is on 
-// Interval Limits
-long 				minFrameInterval 					= 35;
-long 				maxFrameInterval 					= 10000;
-// Duration Limits
-long 				maxFrameDuration 					=	750;
-long 				minFrameDuration 					=	10;
+
 //Chillout mode
 bool 				chilloutMode 					= false;
 long 				chilloutInterval 			= 60*60*3; 					//Every 3 hours. //milliseconds until next chillout.
@@ -60,8 +62,8 @@ int 				bufferIndex 					= 0; 								//This global manages the buffer index.
 boolean 		status								= false; 						//TODO: Add the capability to enable and disable debugging remotely! See 'toggledebug'
 boolean 		debug 								= true;							// Where the frame is updated until we're ready to send the data to the shift registers
 // This array maps a node number to a register and bit. It won't change during the course of the program
-const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95};
-
+const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95};	
+// const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = { 31, 74, 29, 90, 37, 33, 44, 34, 67, 76, 80, 30, 93, 75, 20, 35, 21, 65, 41, 42, 59, 69, 58, 85, 52, 53, 95, 89, 79, 39, 19, 87, 8, 22, 46, 32, 70, 66, 61, 18, 36, 86, 83, 77, 73, 84, 28, 94, 9, 11, 55, 68, 57, 63, 60, 26, 38, 43, 15, 12, 91, 72, 88, 16, 92, 64, 47, 51, 81, 71, 62, 50, 49, 27, 78, 10, 17, 14, 13, 82, 40, 45, 54, 56, 23, 48, 0, 1, 2, 3, 4, 5, 6, 7, 24, 25 };
 
 boolean updateFrame(){
 	
@@ -414,7 +416,7 @@ void serialPolling(){
 
 void nextFrame(){
 	long since = now - then;
-	if(since > frameInterval || since > maxFrameInterval){  
+	if(since > frameInterval || since > MAX_FRAME_INTERVAL){  
 	  // Go to next frame
 		if(updateFrame()){
 			
@@ -445,7 +447,7 @@ void flameSustain(){
   for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
 		long onFor = now - nodeTimeStamps[i];
     if(nodeTimeStamps[i] > 0){
-      if(onFor > frameDuration || onFor > maxFrameDuration){
+      if(onFor > frameDuration || onFor > MAX_FRAME_DURATION){
         nodeOff(i);
       }
     }

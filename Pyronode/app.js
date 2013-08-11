@@ -1,5 +1,4 @@
 
-
 io.sockets.on('connection',function(socket){ 
 	
 		var clients = io.sockets.clients();
@@ -12,7 +11,7 @@ io.sockets.on('connection',function(socket){
 			
 		})
 		
-		socket.emit('pyro.session', {
+		socket.emit('session.start', {
 			
 		})
 		
@@ -20,8 +19,8 @@ io.sockets.on('connection',function(socket){
 	
         var sock_id = io.sockets.sockets['nickname'];
 				var active_id = socket.set('sessionController'); //This is the ID that has control over the Sphere.
-				// if(active_id != sock_id) io.sockets.sockets[sock_id].emit("session", { key  : false } );
-				// else
+				if(active_id != sock_id) io.sockets.sockets[sock_id].emit("session", { key  : false } );
+				// else serial.send(data.req);
 				// else io.sockets.sockets[sock_id].emit("private", "message");
         
 
