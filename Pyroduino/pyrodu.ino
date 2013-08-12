@@ -2,7 +2,7 @@
 #include 		<avr/pgmspace.h>       // For stashing stuff in flash memory
 // #include <SD.h>
 // #include <ArduinoStream.h>
-#include 		<SdFat.h>
+#include    <SdFat.h>
 #include 		<SdFatUtil.h>
 // Pin values for talking to shift registers
 #define 		DATA_PIN 							7 // Data pin for serial communication to shift registers
@@ -19,6 +19,7 @@ long 				MAX_FRAME_INTERVAL 					= 10000;
 // Duration Limits
 long 				MIN_FRAME_DURATION 					=	10;
 long 				MAX_FRAME_DURATION 					=	750;
+
 //Holds the current frame? ...Don't think this is used anywhere. 
 typedef struct _frame {
   int8_t frameChunk[TOTAL_REGISTERS];
@@ -341,12 +342,12 @@ void loop()
 
 void serialRouting(char x){
 	//Flags, set read mode., begin
-	if 				(x == '!') 		{		readMode 	= 1;  	}					//Pattern
-	else if 	(x == '@') 		{		readMode 	= 2;  	}	 				//Frame Duration
-	else if  	(x == '#') 		{		readMode 	= 3; 		}					//Frame Interval
-	else if   (x == '$') 		{		readMode 	= 4;  	}					//Shift Register IDs, separated by comma (no whitespace)
-	else if   (x == '~') 		{		readMode 	= 5;  	}					//System Mode 
-	else if  	(x == '/') 		{		getFiles(); 			}		
+	if 				( x == '!' ) 		{		readMode 	= 1;  	}					//Pattern
+	else if 	( x == '@' ) 		{		readMode 	= 2;  	}	 				//Frame Duration
+	else if  	( x == '#' ) 		{		readMode 	= 3; 		}					//Frame Interval
+	else if   ( x == '$' ) 		{		readMode 	= 4;  	}					//Shift Register IDs, separated by comma (no whitespace)
+	else if   ( x == '~' ) 		{		readMode 	= 5;  	}					//System Mode 
+	else if  	( x == '/' ) 		{		getFiles(); 			}		
 	//Add custom flags here.
 	
 	//Finish up
