@@ -32,14 +32,14 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 	- Checking for Connection "is there serial"
 		- *if there is... we're reading the data
 			- applying the data in realtime to the global scope after routing
-	-otherwise we are running 'Auto Pilot'
-		-loading the pattern/animation
-			-apply first frame to frameBuffer
-	-running conditions on timing to determine whether or not to...
-		-Check valves against pinmap timestamps.
-	-Add nextframe to buffer
-	-turn on the valves.
-	-next frame (reset frame buffer)
+	- otherwise we are running 'Auto Pilot'
+		- loading the pattern/animation
+			- apply first frame to frameBuffer
+	- running conditions on timing to determine whether or not to...
+		- Check valves against pinmap timestamps.
+	- Add nextframe to buffer
+	- turn on the valves.
+	- next frame (reset frame buffer)
 			
 		serialRouting is called at the wrong point in the scope to work with set valves.
 
