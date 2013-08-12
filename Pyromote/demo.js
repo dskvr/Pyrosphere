@@ -129,9 +129,7 @@ $(function(){
 			scope.$stats.find('.x .value').css('font-size', size.x+'pt');
 			scope.$stats.find('.y .value').css('font-size', size.y+'pt');
 			
-			var active = $sphere.pyrosphere('get', 'active');
-			
-			if(active == 0) $sphere.pyrosphere('set', 'active', 1 );
+			if(!$sphere.pyrosphere('get', 'active')) $sphere.pyrosphere('set', 'active', 1 );
 			
 			$sphere.pyrosphere('set', 'frameDuration', scope.status.value.x );
 			$sphere.pyrosphere('set', 'frameInterval', scope.status.value.y );
@@ -259,8 +257,13 @@ $(function(){
 	var patternconfig = { 
 
 		enableHotkeys : true,
-		queueTimeout : 100,
+		queueTimeout : 25000,
 		$loop : $loop,
+		
+		onqueue : function( scope ){
+			var self = this;
+			$('.progress', scope.$clock).stop().css({ right : '100%' }).animate({ right : '0%' }, scope.options.queueTimeout);
+		},
 		
 		onready : function(){
 			console.log('OK!');

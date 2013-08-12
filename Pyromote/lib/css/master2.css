@@ -100,4 +100,8 @@ background-color:Transparent;
 	background-color:Transparent;
 }
 
+#clock { width:auto; margin:0 10px; height:13px; border:1px solid rgba(255,255,255,0.15); padding:4px; position:relative; }
+
+#clock .progress { position:absolute; left:0px; top:0px; bottom:0px; display:block; background:rgba(255,255,255,0.3) }
+
 /*#master {display:none;}{}*/

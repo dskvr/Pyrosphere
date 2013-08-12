@@ -9,7 +9,7 @@
 	$.Pyro.Queue.Extension = '.dat';
 	
 	$.Pyro.Queue.Defaults = {
-		queueTimeout : 1000,
+		queueTimeout : 5000,
 		queueShuffle : false,
 		
 		enableHotkeys : false,
@@ -18,6 +18,7 @@
 		onselect : function( scope, event ){  },
 		onnext : function( scope, event ){  },
 		onprev : function( scope, event ){  },
+		onqueue : function( scope ){},
 		
 		$loop : false
 	}
@@ -87,9 +88,7 @@
 		if(typeof value != 'integer') return;
 		var $container = $(this);
 		var scope = $container.data('Pyro.Queue');
-		
 		scope.options.queueTimeout = value;
-		
 		$container.data('Pyro.Queue', scope);
 		
 	}
@@ -104,10 +103,13 @@
 		var $trigger = $(this)
 		var $container = $trigger.parents('.selector');
 		var scope = $container.data('Pyro.Queue');
+		var self = this;
 		
 				var refresh = scope.options.queueTimeout;
 		
 				if(scope.options.$loop) {
+					
+					scope.options.onqueue.apply( self, [scope] );
 					
 					scope.options.$loop.pyroloop('removeAction', 'patternQueue');
 					scope.options.$loop.pyroloop('addAction', 'patternQueue', function(){
@@ -118,6 +120,9 @@
 						if(random) scope.$container.find('li:random').click();
 						else scope.toggles.$next.click();
 						console.log('executing within $pyroloop');
+						
+						scope.options.onqueue.apply( self, [scope] );
+						
 					}, refresh);
 					
 				} else {
@@ -298,6 +303,11 @@
 				$current.attr('id', 'current');
 		scope.$current = $current;
 		
+		// CLOCK!
+		var $clock = $('<div>');
+				scope.$nav.after($clock);	
+				$clock.attr('id', 'clock').html('<span class="progress">&nbsp;<span>');
+		scope.$clock = $clock;
 		
 		
 		$(this).data('Pyro.Queue', scope);
