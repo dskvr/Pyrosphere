@@ -26,6 +26,22 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 
 # Notes
 - Was coded with Tab Size set as 2... You will thank me later.
+- This code is a mess. Here's what's going on in the loop, since it's not directly obvious...
+-- Configuring application parameters
+-- Mounting SD and directory. 
+-- Checking for Connection "is there serial"
+--- *if there is... we're reading the data
+---- applying the data in realtime to the global scope after routing
+---otherwise we are running 'Auto Pilot'
+----loading the pattern/animation
+-----apply first frame to frameBuffer
+----running conditions on timing to determine whether or not to...
+----Check valves against pinmap timestamps.
+----Apply pattern to pin map
+----turn on the valves.
+----next frame (reset frame buffer)
+			
+		serialRouting is called at the wrong point in the scope to work with set valves.
 
 # Todo 
 - Port code to be functional with 2013 shift registers. (Leif!!!)

@@ -1,4 +1,4 @@
-LOOP = false;
+// loop.intval = false;
 
 (function($){
 	
@@ -27,10 +27,11 @@ LOOP = false;
 		console.log('Pyroloop Reset!');
 		var self = this;
 		
+		var loop = $(self).data('Pyro.Loop');
 
-		if(LOOP) clearInterval(LOOP);
+		if(loop.intval) clearInterval(loop.intval);
 		
-		LOOP = setInterval(function(  ){
+		loop.intval = setInterval(function(  ){
 			var loop = $(self).data('Pyro.Loop');
 			for (var handle in loop.actions) {
 				// console.log(loop)
