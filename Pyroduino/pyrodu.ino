@@ -63,8 +63,8 @@ int 				bufferIndex 					= 0; 								//This global manages the buffer index.
 boolean 		status								= false; 						//TODO: Add the capability to enable and disable debugging remotely! See 'toggledebug'
 boolean 		debug 								= true;							// Where the frame is updated until we're ready to send the data to the shift registers
 // This array maps a node number to a register and bit. It won't change during the course of the program
-const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95};	
-// const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = { 31, 74, 29, 90, 37, 33, 44, 34, 67, 76, 80, 30, 93, 75, 20, 35, 21, 65, 41, 42, 59, 69, 58, 85, 52, 53, 95, 89, 79, 39, 19, 87, 8, 22, 46, 32, 70, 66, 61, 18, 36, 86, 83, 77, 73, 84, 28, 94, 9, 11, 55, 68, 57, 63, 60, 26, 38, 43, 15, 12, 91, 72, 88, 16, 92, 64, 47, 51, 81, 71, 62, 50, 49, 27, 78, 10, 17, 14, 13, 82, 40, 45, 54, 56, 23, 48, 0, 1, 2, 3, 4, 5, 6, 7, 24, 25 };
+// const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95};	
+const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = { 31, 74, 29, 90, 37, 33, 44, 34, 67, 76, 80, 30, 93, 75, 20, 35, 21, 65, 41, 42, 59, 69, 58, 85, 52, 53, 95, 89, 79, 39, 19, 87, 8, 22, 46, 32, 70, 66, 61, 18, 36, 86, 83, 77, 73, 84, 28, 94, 9, 11, 55, 68, 57, 63, 60, 26, 38, 43, 15, 12, 91, 72, 88, 16, 92, 64, 47, 51, 81, 71, 62, 50, 49, 27, 78, 10, 17, 14, 13, 82, 40, 45, 54, 56, 23, 48, 0, 1, 2, 3, 4, 5, 6, 7, 24, 25 };
 
 boolean updateFrame(){
 	
@@ -74,7 +74,7 @@ boolean updateFrame(){
   int8_t data_size=98;              									// This variable sets the number of bytes to read from the file.
   byte fileContents[data_size];          						 	// Temporary buffer to pull data from SD card
     
-  index=animation.read(fileContents, data_size); 			//file_contents is the data buffer for storing data. data_size is a variable set to the amount of data to read.
+  index=animation.read(fileContents, data_size); 			//file_contents is the dataseuffer for storing data. data_size is a variable set to the amount of data to read.
 
   if(index == data_size ){
     for(int i = 0; i < data_size - 2 ; i++){ 					// -1 for cr at end of frame
@@ -304,9 +304,9 @@ static long 				now 						= 0;                 // Will be populated with the cur
 static int8_t 			loopThresh 			= 3;
 static int8_t 			loopCount 			= loopThresh + 1;
 
-//autoPilot (right now random, let's diversify!)
-static boolean 			autoPilot 			= true;					//Initiates the pilot
-static long 				serialTimeout 	= 20000;				//How long after serial is silent will autoPilot begin.
+//fallback (right now random, let's diversify!)
+static boolean 			fallback 			= true;					//Initiates the pilot
+static long 				serialTimeout 	= 20000;				//How long after serial is silent will fallback begin.
 static long 				lastSerialCMD 	= 0;						//Last time a serial command was recieved
 int 								readMode 				= 0; 						//Wait
 int									systemMode 			= 0;    				//Random, 1: MasterController, 2: Valve Tracer
@@ -322,14 +322,15 @@ void loop()
 	}
 	
   now = millis();       	// This moment is beautiful.
-	//
-	flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
-	//
-	nextFrame();					// Select mode based on information.
-	//
-	serialPolling();				// Check for last CMD
-	//
-  ignite();       				// Send the 1011 and let the people have some fun.
+
+		//
+		flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
+		//
+		nextFrame();					// Select mode based on information.
+		//
+		serialPolling();				// Check for last CMD
+		//
+	  ignite();       				// Send the 1011 and let the people have some fun.
 
 	//We are polling the serial connection.
 	while(Serial.available() > 0) {
@@ -364,9 +365,9 @@ void serialRouting(char x){
 			default:  												break;	
 		}
 		
-			lastSerialCMD = now; 						//Used for switching to autoPilot
+			lastSerialCMD = now; 						//Used for switching to fallback
 			readMode = 0;										//We're done reading. (until another.)
-			autoPilot = false;
+			fallback = false;
 		
 			bufferIndex = 0;
 					
@@ -403,10 +404,10 @@ flame control
 
 void serialPolling(){
 	if(now - lastSerialCMD > serialTimeout){  
-    if(autoPilot == false){
+    if(fallback == false){
       Serial.println("Automatic love generation.");
     }      
-    autoPilot = true;
+    fallback = true;
   }
 }
 
@@ -422,7 +423,7 @@ void nextFrame(){
 		if(updateFrame()){
 			
 	    if(loopCount > loopThresh){
-	      if(autoPilot){
+	      if(fallback){
 					// if 				(controlMode == '0') 	randomAnimation();
 					// else if 	(controlMode == '1') 	progressiveAnimation();
 					goGoAutoPilot();
@@ -526,7 +527,8 @@ void flameSustain(){
 
 	void setValves(){
 		
-		// frameInterval = atoi(messageBuffer);
+		framenumber = atoi(messageBuffer);
+		nodeOn(framenumber);
 		// resetMessageBuffer();
 	
 	}
