@@ -118,7 +118,7 @@ boolean getTotalFiles(){
 
 // AUTOPILOT!
 
-void goGoAutoPilot(){
+void goGoFallback(){
 	//Here we would switch through progressive mode, random mode, chillout mode, and break mode (repeat)
 	//GoGoAutopolot is disrupted when there is serial information.
 	randomAnimation(); //for now let's call random animation.
@@ -323,6 +323,7 @@ void loop()
 	
   now = millis();       	// This moment is beautiful.
 
+
 		//
 		flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
 		//
@@ -426,7 +427,7 @@ void nextFrame(){
 	      if(fallback){
 					// if 				(controlMode == '0') 	randomAnimation();
 					// else if 	(controlMode == '1') 	progressiveAnimation();
-					goGoAutoPilot();
+					goGoFallback();
 	      }
 	      loopCount = 0;
 	    } else {
