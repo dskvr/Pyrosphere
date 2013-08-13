@@ -44,6 +44,7 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 		
 ## Pyromote 
 - Edit socket URI to match your own in ./lib/js/pyro/pyro.config ... see examples
+- Edit index.html and change host to match your own (if you have a good way to configure this, let me know!)
 		
 ## Pyronode 
 - Install dependencies
