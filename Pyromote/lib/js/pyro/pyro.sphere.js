@@ -33,9 +33,10 @@
 				lastRequest : -1,
 				totalRequests : 0,
 			};
-			
-			scope.socket = io.connect('http://dskvr-2.local:3000');			
-			
+
+			$('script[name=socket]').attr('src', $.Pyro.Config.URI.Socket+'/socket.io/socket.io.js');			
+			scope.socket = io.connect();			
+
 
 			// if(!scope.options.$grid) return;
 			

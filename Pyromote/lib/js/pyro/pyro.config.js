@@ -13,6 +13,29 @@ $(function($){
 	
 	$.Pyro.Config.Limits = new Object();
 	
+	
+	/***************************************
+		Environment Configuration
+		Developers edit these...!
+	/***************************************/
+	
+	$.Pyro.Config.URI = new Object();
+
+	// $.Pyro.Config.URI.Socket = 'http://localhost:3000'; /*development*/
+	// $.Pyro.Config.URI.Socket = 'http://192.168.1.111:3000'; /*production*/
+	$.Pyro.Config.URI.Socket = 'http://dskvr-2.local:3000'; /*edge testing, alpha*/
+
+
+
+
+	/***************************************
+		Experience Configuration
+		Edit these to create optimal user experience by 
+		finding the 'sweet spot'
+	/***************************************/	
+	
+
+	
 	//
 	// ACTIONABLE PARAMS
 	//
@@ -27,6 +50,9 @@ $(function($){
 	$.Pyro.Config.Limits.Duration.Max = 400;
 	
 	$.Pyro.Config.Limits.IdleThreshold = 60*1000; //sixty seconds.
+	
+	
+	
 
 	//
 	// UI PREFERENCES
