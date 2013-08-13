@@ -96,13 +96,13 @@ $(function(){
 			
 			watch(scope.status.value, 'x', function(prop, action, newvalue, oldvalue){
 				// duration
-				console.log('x change')
+				// console.log('x change')
 			  // socket.emit('pipe', '@'+newValue.x || oldValue.x+'.');
 			});
 			
 			watch(scope.status.value, function(prop, action, newvalue, oldvalue){
 				//interval
-				socket.emit('pipe', '#'+newValue.y || oldValue.y+'.');
+				// socket.emit('pipe', '#'+newValue.y || oldValue.y+'.');
 			});
 			
 			// watch(scope.timestamp, 'lastActivity', function(){
@@ -233,7 +233,7 @@ $(function(){
 			labelX : 'Duration',
 			labelY : 'Interval',
 
-			// hold : true,
+			hold : true,
 			// useX : false,
 			pressmove : xy.action.move,
 			pressdown : xy.action.down,
@@ -257,7 +257,7 @@ $(function(){
 	var patternconfig = { 
 
 		enableHotkeys : true,
-		queueTimeout : 25000,
+		queueTimeout : 5555,
 		$loop : $loop,
 		
 		onqueue : function( scope ){
@@ -277,6 +277,7 @@ $(function(){
 		},
 		
 		onselect : function( scope, event ){
+			
 			//If enough time has passed...
 			$sphere.pyrosphere('set', 'pattern', scope.current.data.filename);
 			$sphere.pyrosphere('process');

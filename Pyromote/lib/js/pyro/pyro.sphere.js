@@ -33,6 +33,9 @@
 				lastRequest : -1,
 				totalRequests : 0,
 			};
+			
+			scope.socket = io.connect('http://dskvr-2.local:3000');			
+			
 
 			// if(!scope.options.$grid) return;
 			
@@ -71,7 +74,8 @@
 			console.log(scope.request);
 			
 			scope.status.lastRequest = now;
-			// $.Pyro.Socket.emit('pipe', scope.request);
+			
+			scope.socket.emit('pyro.pipe', scope.request);
 			
 			scope.request = "";
 			$(this).data('Pyro.Sphere', scope);
@@ -121,26 +125,26 @@
 		$.Pyro.Sphere.send = function( request ) {
 			var scope = $(this).data('Pyro.Sphere');
 			//Make sure this is properly formatted!
-			// $.Pyro.Socket.emit('pipe', request);
+			// scope.socket.emit('pyro.pipe', request);
 		}
 		
 		//Helpers
 		$.Pyro.Sphere.updateInterval = function(interval){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			// $.Pyro.Socket.emit('pipe', '#'+interval+'.');
+			// scope.socket.emit('pipe', '#'+interval+'.');
 		}
 		
 		$.Pyro.Sphere.updateDuration = function(duration){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			// $.Pyro.Socket.emit('pipe', '@'+duration+'.');
+			// scope.socket.emit('pipe', '@'+duration+'.');
 		}
 		
 		$.Pyro.Sphere.updatePattern = function(pattern){
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
-			// $.Pyro.Socket.emit('pipe', '!'+pattern+'.');
+			// scope.socket.emit('pipe', '!'+pattern+'.');
 		}
 		
 		// Generic Send, formatted string.
@@ -149,18 +153,18 @@
 		// 			
 		// 				method = method ? 'sphere.'+method : 'sphere';
 		// 				//
-		//         $.Pyro.Socket.emit(method, message);
+		//         scope.socket.emit(method, message);
 		// 				//
 		//     };
 
 		$.Pyro.Sphere.off = function(pyro, message){
 				var scope = $(this).data('Pyro.Sphere');
-				$.Pyro.Socket.emit('sphere.active', 0);
+				// scope.socket.emit('sphere.active', 0);
     };
 
 		$.Pyro.Sphere.on = function(el, message){
 			var scope = $(this).data('Pyro.Sphere');
-       $.Pyro.Socket.emit('sphere.active', 1);
+       // scope.socket.emit('sphere.active', 1);
     };
     
     $.Pyro.Sphere.defaultOptions = {
