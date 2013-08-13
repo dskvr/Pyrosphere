@@ -262,7 +262,14 @@ $(function(){
 		
 		onqueue : function( scope ){
 			var self = this;
+			scope.$clock.show();
 			$('.progress', scope.$clock).stop().css({ right : '100%' }).animate({ right : '0%' }, scope.options.queueTimeout);
+		},
+		
+		onqueuestop : function( scope ){
+			var self = this;
+			scope.$clock.hide();
+			$('.progress', scope.$clock).stop().css({ right : '100%' });
 		},
 		
 		onready : function(){
@@ -271,7 +278,8 @@ $(function(){
 		
 		onselect : function( scope, event ){
 			//If enough time has passed...
-			console.log('Love????');
+			$sphere.pyrosphere('set', 'pattern', scope.current.data.filename);
+			$sphere.pyrosphere('process');
 			
 		}
 		

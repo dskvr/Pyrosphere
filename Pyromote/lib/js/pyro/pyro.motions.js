@@ -19,7 +19,8 @@
 		onnext : function( scope, event ){  },
 		onprev : function( scope, event ){  },
 		onqueue : function( scope ){},
-		
+		onqueuestop : function( scope ){},
+				
 		$loop : false
 	}
 	
@@ -65,7 +66,7 @@
 		$.Pyro.Queue.HTML.apply(this);
 		$.Pyro.Queue.Bind.apply(this);
 		
-		scope.$ul.find('li').pyroqueue('select');
+		scope.$ul.find('li:first').pyroqueue('select');
 		
 		scope.options.onready.apply(this, [scope]);
 		
@@ -134,6 +135,8 @@
 
 						if(random) scope.$container.find('li:random').click();
 						else scope.toggles.$next.click();
+						
+						scope.options.onqueue.apply( self, [scope] );
 
 					}, refresh)
 				}
@@ -158,6 +161,8 @@
 		scope.toggles.$playqueue.removeClass('active');
 		
 		$container.data('Pyro.Queue', scope);
+		
+		scope.options.onqueuestop.apply( self, [scope] );
 		
 	}
 	
