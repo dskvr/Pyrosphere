@@ -343,6 +343,7 @@ void loop()
 }
 
 void serialRouting(char x){
+	
 	//Flags, set read mode., begin
 	if 				( x == '!' ) 		{		readMode 	= 1;  	}					//Pattern
 	else if 	( x == '@' ) 		{		readMode 	= 2;  	}	 				//Frame Duration
@@ -411,7 +412,7 @@ void serialPolling(){
     fallback = true;
   }
 }
-
+	
 /*************************************************************************************
  * Mode Selector
  * Checks for last successful serial request.

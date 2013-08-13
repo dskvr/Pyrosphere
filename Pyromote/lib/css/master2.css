@@ -86,6 +86,8 @@ body 					 { background:#000; overflow:hidden; }
 .selector .toggles, .selector .nav {text-align:center;}
 .selector .toggles a, .selector .nav a {font-size:8pt;text-transform:uppercase;cursor:pointer;padding:15px 10px;margin:3px 3px;display:inline-block;}
 
+/*#toolbar {display:none;}*/
+
 #play-queue.active { background:green;color:#fff; }
 #stop-queue:hover {background:#111;}
 #shuffle.active { background:#444;; color: yellow; }
