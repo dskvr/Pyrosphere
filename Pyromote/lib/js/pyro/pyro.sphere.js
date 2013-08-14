@@ -34,8 +34,8 @@
 				totalRequests : 0,
 			};
 
-			$('script[name=socket]').attr('src', $.Pyro.Config.URI.Socket+'/socket.io/socket.io.js');			
-			scope.socket = io.connect();			
+			// $('script[name=socket]').attr('src', $.Pyro.Config.URI.Socket+'/socket.io/socket.io.js');			
+			scope.socket = io.connect($.Pyro.Config.URI.Socket);			
 
 
 			// if(!scope.options.$grid) return;
