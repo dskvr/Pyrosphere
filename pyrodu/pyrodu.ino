@@ -4,6 +4,11 @@
 // #include <ArduinoStream.h>
 #include    <SdFat.h>
 #include 		<SdFatUtil.h>
+
+// Conversion for old pyrosphere model with sparkfun SD reader.
+#define VERSION 2
+int 			chipSelect 								= 8; // for Sparkfun	
+
 // Pin values for talking to shift registers
 #define 		DATA_PIN 							7 // Data pin for serial communication to shift registers
 #define 		LATCH_PIN 						2 // Latch pin for serial communication to shift registers
@@ -33,8 +38,7 @@ Sd2Card 		card;
 SdVolume 		volume;
 SdFile 			root;
 SdFile 			animation;
-//SD Settings.
-int 				chipSelect 						= 8;
+
 uint8_t	 		partition 						= 1;
 dir_t 			directory;
 int 				totalFiles;
@@ -42,8 +46,8 @@ int 				totalFiles;
 char 				currentFile[FILE_NAME_SIZE]; 						 // The current animation file we're on, assumining 8+3 filename
 //Runtime Variables
 long 				nodeTimeStamps[TOTAL_NODES]; 						 // Since defining arrays requires you put in the total number of elements, add 1
-long 				frameInterval 				= 20;             // Interval between frames
-long 				frameDuration 				=	400;              // Time a given  is on 
+long 				frameInterval 				= 50;             // Interval between frames
+long 				frameDuration 				=	100;              // Time a given  is on 
 
 //Chillout mode
 bool 				chilloutMode 					= false;
@@ -237,6 +241,18 @@ boolean mount(){
 	bool error = false;
   
 	Serial.print("Initializing Card. ");
+	
+	
+	//SD Settings.	
+	if (VERSION != 1) {
+		// DEFINE SDPIN depending on Uno or Mega chip ala: http://www.ladyada.net/learn/arduino/ethfiles.html
+
+		int 			chipSelect 						= 4;	 // for Arduino Ethernet Shield SD
+		int sdpin = 54;
+		pinMode(sdpin, OUTPUT);                       // set the SS pin as an output (necessary!)
+		digitalWrite(sdpin, HIGH);                    // but turn off the W5100 chip!		
+	}
+
   if (!card.init(SPI_FULL_SPEED, chipSelect)) {
 		Serial.println("ERROR: card.init"); // initialize the SD card
 		error = true;
@@ -315,17 +331,19 @@ void loop()
 {
 	
 	if(!status) {
+		Serial.println("ReMounting...");
 		flash();
 		status = mount();
 		delay(5000);
 		return;
 	}
-	
+
   now = millis();       	// This moment is beautiful.
 	//
 	flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
 	//
-	nextFrame();					// Select mode based on information.
+	// nextFrame();					// Select mode based on information.
+	modeSelektor();					// Select mode based on information.
 	//
 	serialPolling();				// Check for last CMD
 	//
@@ -415,27 +433,58 @@ void serialPolling(){
  * Checks for last successful serial request.
  *************************************************************************************/
 
-void nextFrame(){
+void modeSelektor(){
 	long since = now - then;
 	if(since > frameInterval || since > MAX_FRAME_INTERVAL){  
 	  // Go to next frame
-		if(updateFrame()){
-			
-	    if(loopCount > loopThresh){
-	      if(autoPilot){
-					// if 				(controlMode == '0') 	randomAnimation();
-					// else if 	(controlMode == '1') 	progressiveAnimation();
-					goGoAutoPilot();
-	      }
-	      loopCount = 0;
-	    } else {
-	      loopCount++;
-	    }
-
-	  }
+		nextFrame();
 	}
+}
+
+
+void nextFrame(){
+	if(updateFrame()){
+    if(loopCount > loopThresh){
+      if(autoPilot){
+				// if 				(controlMode == '0') 	randomAnimation();
+				// else if 	(controlMode == '1') 	progressiveAnimation();
+			goGoAutoPilot();
+      }
+      loopCount = 0;
+    } else {
+      loopCount++;
+    }
+
+  }
   then = now;
 }
+// void nextFrame(){
+// 	long since = now - then;
+// 	
+// 	// Serial.print("Since: "); ///
+// 	// Serial.println(since);///
+// 	
+// 	if(since > frameInterval || since > MAX_FRAME_INTERVAL){  
+// 		Serial.println("Going to Next Frame...");///
+// 		
+// 	  // Go to next frame
+// 		if(updateFrame()){
+// 			
+// 	    if(loopCount > loopThresh){
+// 	      if(autoPilot){
+// 					// if 				(controlMode == '0') 	randomAnimation();
+// 					// else if 	(controlMode == '1') 	progressiveAnimation();
+// 					goGoAutoPilot();
+// 	      }
+// 	      loopCount = 0;
+// 	    } else {
+// 	      loopCount++;
+// 	    }
+// 
+// 	  }
+// 	}
+//   then = now;
+// }
 
 /*************************************************************************************
  * Safety + Sustain
@@ -443,7 +492,7 @@ void nextFrame(){
  *************************************************************************************/
 
 void flameSustain(){
-	
+
 	//Check for length the
   for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
 		long onFor = now - nodeTimeStamps[i];
