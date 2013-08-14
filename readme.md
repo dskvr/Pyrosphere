@@ -52,12 +52,19 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 
 - Start app
 	sudo node app.js
+	 
 	
 ## Test! 
 - Load up localhost:8080/ in your browser (or whatever host you have set)
 - Open console
 - Click the XY
 	
+# Hack! 
+- !00. = Pattern Number
+- @100. = duration
+- #100. = Interval.
+- Send these parameters to the server via event 'pyro.pipe' to alter interval variables.
+- Coming soon! "^1,1." ... Turn valve one on (safety feature will turn itself off.)
 
 # Todo 
 - Port code to be functional with 2013 shift registers. (Leif!!!)
