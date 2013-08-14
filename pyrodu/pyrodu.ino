@@ -46,8 +46,8 @@ int 				totalFiles;
 char 				currentFile[FILE_NAME_SIZE]; 						 // The current animation file we're on, assumining 8+3 filename
 //Runtime Variables
 long 				nodeTimeStamps[TOTAL_NODES]; 						 // Since defining arrays requires you put in the total number of elements, add 1
-long 				frameInterval 				= 20;             // Interval between frames
-long 				frameDuration 				=	400;              // Time a given  is on 
+long 				frameInterval 				= 50;             // Interval between frames
+long 				frameDuration 				=	100;              // Time a given  is on 
 
 //Chillout mode
 bool 				chilloutMode 					= false;
