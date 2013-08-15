@@ -47,6 +47,8 @@
 			useX : true,
 			useY : true,
 			
+			noMouseClick : false,
+			
 			labelX : 'x',
 			labelY : 'y',
 			
@@ -254,7 +256,8 @@
 			var scope = $(this).data('Pyro.Grid');
 			var pos = { x: event.pageX, y: event.pageY };
 			
-			if(scope.status.mousedown == false) return;
+			if(scope.status.mousedown == false && !scope.options.noMouseClick) return;
+			
 			if($.Pyro.Grid.outOfBounds( pos, scope )) return;
 			
 			$.Pyro.Grid.Status.Update.apply(this, [pos, event, scope]);
@@ -280,12 +283,23 @@
 		$.Pyro.Grid.Events.TouchEnd = function( event ){
 			
 			var scope = $(this).data('Pyro.Grid');
-			scope.options.pressup.apply( this , [pos, event , scope] );
+			
+			if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
+			
+			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
+				if(!scope.options.hold) {
+					scope.$pointer.hide(); //Hide by default.
+				}
+			}
+			
+			$(this).data('Pyro.Grid', scope);
 			
 		}
 		
 		$.Pyro.Grid.Events.TouchMove = function( event ){
-			
+
+			event.preventDefault();			
+
 			var scope = $(this).data('Pyro.Grid');
 			var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
 			var pos = { x: touch.pageX, y: touch.pageY };
@@ -295,6 +309,7 @@
 			$.Pyro.Grid.Status.Update.apply(this, [ pos, event, scope ]);
 			scope.options.pressmove.apply( this , [pos, event, scope] );
 			scope.options.change.apply( this , [pos, event, scope] );
+
 			
 		}
 		
@@ -358,6 +373,11 @@
 			$grid.bind('touchend', $.Pyro.Grid.Events.TouchEnd);
 			$grid.bind('touchmove', $.Pyro.Grid.Events.TouchMove);
 			
+			//Prevents mobile scrolling.
+			document.bind('touchstart', function(e){  e.preventDefault();  });
+			document.body.addEventListener('touchstart', function(e){ e.preventDefault(); });
+			$(document).bind('selectstart', function(){ return false; } );
+			
 		}
 	
 		
@@ -374,7 +394,9 @@
 			
 			scope.$pointer = $pointer;
 			scope.$stats = $('<div>');
-			scope.$stats.addClass('grid-stats');					
+			scope.$stats.addClass('grid-stats');		
+			
+			scope.$veil = $('<div>').appendTo($grid).addClass('veil');
 			
 			$grid.before(scope.$stats);
 
