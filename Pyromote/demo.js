@@ -232,7 +232,7 @@ $(function(){
 			
 			labelX : 'Duration',
 			labelY : 'Interval',
-
+			// noMouseClick : true,
 			hold : true,
 			// useX : false,
 			pressmove : xy.action.move,
@@ -288,15 +288,10 @@ $(function(){
 	
 	$loop.pyroloop('addAction', 'timeElapsed', function(){
 		
-		// console.log('Time!');
-		
 		var time = $app.data('Pyro.Time');
-		// console.log(time);
-		if(!time) time = { started : new Date().getTime(), elapsed : 0, now : new Date().getTime(), last : new Date().getTime() }
-		// if(!time.last) {
-			// $app.data('Pyro.Time', time);
-			// return;
-		// }
+		
+		if(!time) time = { started : new Date().getTime(), elapsed : 0, now : new Date().getTime(), last : new Date().getTime() };
+			
  		var last = time.now;
 		time.now = new Date().getTime()
 		time.elapsed = time.started - last;
@@ -304,7 +299,7 @@ $(function(){
 
 		$app.data('Pyro.Time', time);		
 		
-	}, 1000)
+	}, 1000);
 	
 	var $patterns = $('#patterns').pyroqueue(patternconfig, patterndata);
 	
@@ -312,14 +307,14 @@ $(function(){
 						
 		return {
 			useX : false,
-			hold :true,
+			hold : true,
 			setup : function( scope ){
 				// console.log(scope.status.offset);
 				// console.log(scope.status.placement);
 			},
 			pressdown : function( pos, event, scope ){
 				// console.log(scope.status.offset);
-				// console.log(scope.status.offset);
+				console.log( pos );
 			}
 		}
 		
