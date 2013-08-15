@@ -11,12 +11,14 @@ section[role=xaxis] { position:absolute; top: 0px; left:0px; right:0px; height:5
 section[role=yaxis] { position:absolute; top: 0px; bottom:0px; left:0px; width:50%; border-right:1px dotted #111; }
 
 
-body 					 { background:#000; overflow:hidden; }
+body 					 { background:#000; /*overflow:hidden;*/ }
 
-.grid 				 { width:100%; height:100%; overflow:hidden; position:relative; z-index:1000}
+.grid 				 { width:100%; height:100%; /*overflow:hidden;*/ position:relative; top:0px; z-index:1000}
 
 .grid-half     { width: 50%; float:left; }
 .grid-third     { width: 33.33%; float:left; }
+
+.grid .veil { position:absolute; top:0px; left:0px; right:0px; bottom:0px; z-index:99999;}
 
 .grid .pointer { 
 	left:0px; /*x*/
@@ -69,11 +71,11 @@ body 					 { background:#000; overflow:hidden; }
 
 /*nav ul li a {text-decoration:none;color:#555;}*/
 
-#toolbar {position:absolute;left:0px;top:0px; width:200px; z-index:9000000; background:rgba(255,255,255,0.1); height:100%; color:#999;}
+#toolbar {position:absolute;right:0px;top:0px; width:200px; z-index:9000000; background:rgba(255,255,255,0.1); height:100%; color:#999;}
 
-#toolbar ul.options { width:1000px; position:absolute; left:-300px; top:600px; transform: rotate(90deg);-ms-transform: rotate(90deg); -webkit-transform: rotate(90deg); }
-#toolbar ul.options li {display:inline-block; float:left; margin-right:20px; padding:10px 25px; }
-#toolbar ul.options li.selected { background:rgba(255,255,255,0.1); }
+#toolbar ul.options { display:none; width:1000px; position:absolute; left:-300px; top:600px; transform: rotate(90deg);-ms-transform: rotate(90deg); -webkit-transform: rotate(90deg); }
+/*#toolbar ul.options li {display:inline-block; float:left; margin-right:20px; padding:10px 25px; }*/
+/*#toolbar ul.options li.selected { background:rgba(255,255,255,0.1); }*/
 
 .selector {position:absolute;left:0px;top:0px;height:100%; width:100%; color:#999;}
 
@@ -95,15 +97,24 @@ body 					 { background:#000; overflow:hidden; }
 .selector #current {font-size:30pt;color:#999;text-align:center;position:absolute;bottom:0px;left:0px;width:100%;}
 
 body::-moz-selection{
-background-color:Transparent;
+	background-color:Transparent;
 }
 
-::selection {
+*::selection {
 	background-color:Transparent;
+	-webkit-user-select: none;
+}
+
+* {
+	-webkit-user-select: none;
 }
 
 #clock { width:auto; margin:0 10px; height:13px; border:1px solid rgba(255,255,255,0.15); padding:4px; position:relative; }
 
 #clock .progress { position:absolute; left:0px; top:0px; bottom:0px; display:block; background:rgba(255,255,255,0.3) }
 
-/*#master {display:none;}{}*/
+/*#master, #toolbar {display:none;}{}*/
+	
+/*#toolbar { display:none; }*/
+
+#sliders { display:none; }
