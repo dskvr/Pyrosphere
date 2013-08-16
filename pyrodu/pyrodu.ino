@@ -6,7 +6,7 @@
 #include 		<SdFatUtil.h>
 
 // Conversion for old pyrosphere model with sparkfun SD reader.
-#define VERSION 2
+#define VERSION 1
 int 			chipSelect 								= 8; // for Sparkfun	
 
 // Pin values for talking to shift registers
@@ -56,7 +56,7 @@ long 				chilloutDuration 			= 60*5; 						//5 Minutes.
 long 				chilloutFrameInterval = 3000; 						//This is how long in between each frame in Chillout Mode
 long 				chilloutFrameDuration = 500; 							//The duration of the flame.
 // Control Mode
-int 				controlMode 					= 0; 								//default: random;
+int 				controlMode 					= 1; 								//default: random;
 //Frame
 Frame 			frameBuffer;
 char 				messageBuffer[20];
@@ -222,6 +222,8 @@ void setup(){
 	
 	status = mount();
 	
+	Serial.print("Mode: ");
+	Serial.println(controlMode);
 }
 
 
@@ -363,8 +365,9 @@ void serialRouting(char x){
 	if 				( x == '!' ) 		{		readMode 	= 1;  	}					//Pattern
 	else if 	( x == '@' ) 		{		readMode 	= 2;  	}	 				//Frame Duration
 	else if  	( x == '#' ) 		{		readMode 	= 3; 		}					//Frame Interval
-	else if   ( x == '$' ) 		{		readMode 	= 4;  	}					//Shift Register IDs, separated by comma (no whitespace)
-	else if   ( x == '~' ) 		{		readMode 	= 5;  	}					//System Mode 
+	else if   ( x == '+' ) 		{		readMode 	= 4;  	}					//Shift Register IDs, separated by comma (no whitespace)
+	else if   ( x == '-' ) 		{		readMode 	= 5;  	}					//Shift Register IDs, separated by comma (no whitespace)
+	else if   ( x == '~' ) 		{		readMode 	= 6;  	}					//System Mode 
 	else if  	( x == '/' ) 		{		getFiles(); 			}		
 	//Add custom flags here.
 	
@@ -377,8 +380,9 @@ void serialRouting(char x){
 			case 1: 			setPattern();   		break;
 			case 2:  			setDuration();  		break;
 			case 3:  			setInterval();  		break;
-			case 4: 			setValves(); 				break;
-			case 5: 			setMode();					break;
+			case 4: 			setValveOn(); 			break;
+			case 5: 			setValveOff();			break;
+			case 6: 			setMode();					break;			
 			default:  												break;	
 		}
 		
@@ -420,12 +424,18 @@ flame control
  *************************************************************************************/
 
 void serialPolling(){
-	if(now - lastSerialCMD > serialTimeout){  
-    if(autoPilot == false){
-      Serial.println("Automatic love generation.");
-    }      
-    autoPilot = true;
-  }
+
+	if (controlMode == 0) {
+		panic();
+	} else  {
+		if(now - lastSerialCMD > serialTimeout){  
+	    if(autoPilot == false){
+	      Serial.println("Automatic love generation.");
+	    }      
+	    autoPilot = true;
+			controlMode = 1;		
+	  }
+	}
 }
 
 /*************************************************************************************
@@ -437,18 +447,24 @@ void modeSelektor(){
 	long since = now - then;
 	if(since > frameInterval || since > MAX_FRAME_INTERVAL){  
 	  // Go to next frame
-		nextFrame();
+		if (controlMode == 1) 	{nextFrame();}
+		// nextFrame();
+		// else if 	(controlMode == '2');	
+		
 	}
+	
+	
 }
 
 
 void nextFrame(){
+
 	if(updateFrame()){
     if(loopCount > loopThresh){
       if(autoPilot){
-				// if 				(controlMode == '0') 	randomAnimation();
-				// else if 	(controlMode == '1') 	progressiveAnimation();
-			goGoAutoPilot();
+				// if 			(controlMode == '1') 	randomAnimation();
+				// else if 	(controlMode == '2') 	progressiveAnimation();
+				goGoAutoPilot();
       }
       loopCount = 0;
     } else {
@@ -532,6 +548,8 @@ void flameSustain(){
 		Serial.print("Setting Pattern: ");
 		Serial.println(patternName);
 		
+		controlMode = 1;
+		
 	  changePattern(patternName);
 		
 		resetMessageBuffer();
@@ -569,35 +587,91 @@ void flameSustain(){
 	}
 	
 	/**
-	 * Set Registers
-	 * Open the specifed valves.
+	 * Set Register On
+	 * Open the specified valve.
 	 */
 
-	void setValves(){
+	void setValveOn(){
 		
-		// frameInterval = atoi(messageBuffer);
-		// resetMessageBuffer();
-	
+		int valveID = atoi(messageBuffer);
+
+		if (valveID < TOTAL_NODES) {
+			if (debug) {
+				Serial.print("Setting Valve On: ");
+				Serial.println(valveID);			
+			}
+
+			if (controlMode != 2) {
+				controlMode = 2; /// This might be in the wrong place.
+			}
+
+		  nodeOn(valveID);
+		}		
+		
+		resetMessageBuffer();		
+
 	}
 	
+	/**
+	 * Set Register Off
+	 * Close the specified valve.
+	 */
+	
+	void setValveOff(){
+		
+		int valveID = atoi(messageBuffer);
+		
+		if (valveID < TOTAL_NODES) {
+			if (debug) {
+				Serial.print("Setting Valve Off: ");
+				Serial.println(valveID);			
+			}
+
+		  nodeOff(valveID);			
+		}		
+
+		resetMessageBuffer();		
+
+	}
 	
 	/**
 	 * Set Mode
-	 * Set the recieve mode.
+	 * Set the receive mode.
 	 */
 
-	void setMode(){}
+	void setMode(){
 	
-	
+		char *modeSig = messageBuffer;
+		int mode = atoi(modeSig); 
+		// strcat(modeName, ".dat");
+			
+		Serial.print("Setting Mode: ");
+		Serial.println(modeSig);
+		
+		//This will update the global variables accordingly.
+		switch(mode){
+			case 0: 			controlMode = 0;   		break; // Off.
+			case 1: 			controlMode = 1;   		break; // Autopilot Random
+			case 2:  			controlMode = 2;  		break; // Valve Control
+			case 3:  			controlMode = 3;  		break; // 
+			case 4: 			controlMode = 4;			break; // ...
+			case 5: 			controlMode = 5;			break; // ...
+			default:  													break;	
+		}	
+		
+		resetMessageBuffer();
+		
+	}
+		
 	/**
 	 * Get Files.
 	 * returns a list of the files. 
 	 */
 
-	void getFiles(){
-	
-		// while(root.readDir()) {}
-	
+	void getFiles(){		 	
+		// while(root.readDir(&directory)) {			
+		// 	
+		// }
 	}
 
 
@@ -637,8 +711,6 @@ void flameSustain(){
  * ignite() - sends the contents of frameBuffer to the shift registers
  * initFrameBuffer() - sets every node to off
  *************************************************************************************/
-
-
 
 // Send the frameBuffer (buffer) to the shift registers
 void ignite(){
