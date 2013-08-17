@@ -55,7 +55,7 @@ var numberMin = 10;
 io.on('connection',function(socket){
 	
 	socket.on('pyro.pipe', function(request){
-		console.log('pyro.pipe?');
+		// console.log('pyro.pipe?');
 		console.log(request);
 		serial.write(request);
 	});
