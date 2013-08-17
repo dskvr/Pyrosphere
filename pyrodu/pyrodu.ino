@@ -3,27 +3,28 @@
 // #include <SD.h>
 // #include <ArduinoStream.h>
 #include    <SdFat.h>
-#include 		<SdFatUtil.h>
+// #include 		<SdFatUtil.h>
 
 // Conversion for old pyrosphere model with sparkfun SD reader.
 #define VERSION 1
-int 			chipSelect 								= 8; // for Sparkfun	
 
 // Pin values for talking to shift registers
-#define 		DATA_PIN 							7 // Data pin for serial communication to shift registers
-#define 		LATCH_PIN 						2 // Latch pin for serial communication to shift registers
-#define 		CLOCK_PIN 						6 // Clock pin for serial communication to shift registers
-// General Definitions
-#define 		TOTAL_REGISTERS 			12 // Total registers (chips, bytes) being talked to
-#define 		TOTAL_NODES 					96 // 0 -  85 makes 86 nodes
-#define 		FILE_NAME_SIZE 				12 // 8.3 filenames need 12 char to define them
-
-// Interval Limits
-long 				MIN_FRAME_INTERVAL 					= 35;
-long 				MAX_FRAME_INTERVAL 					= 10000;
-// Duration Limits
-long 				MIN_FRAME_DURATION 					=	10;
-long 				MAX_FRAME_DURATION 					=	750;
+#define 		DATA_PIN 									7 // Data pin for serial communication to shift registers
+#define 		LATCH_PIN 								2 // Latch pin for serial communication to shift registers
+#define 		CLOCK_PIN 								6 // Clock pin for serial communication to shift registers
+// General Definitions            		
+#define 		TOTAL_REGISTERS 					12 // Total registers (chips, bytes) being talked to
+#define 		TOTAL_NODES 							96 // 0 -  85 makes 86 nodes
+#define 		FILE_NAME_SIZE 						12 // 8.3 filenames need 12 char to define them
+                                  		
+// Interval Limits                		
+#define 		MIN_FRAME_INTERVAL 				 35
+#define 		DEFAULT_FRAME_INTERVAL		 100 /// Final Decision? What should this be?
+#define			MAX_FRAME_INTERVAL 				 10000
+// Duration Limits                		    
+#define 		MIN_FRAME_DURATION 				 10
+#define 		DEFAULT_FRAME_DURATION		 75 /// Final Decision? What should this be?
+#define 		MAX_FRAME_DURATION 				 750
 
 //Holds the current frame? ...Don't think this is used anywhere. 
 typedef struct _frame {
@@ -40,26 +41,30 @@ SdFile 			root;
 SdFile 			animation;
 
 uint8_t	 		partition 						= 1;
+uint8_t 		chipSelect 						= 8; // for Sparkfun	4 for Ethernet
 dir_t 			directory;
+
 int 				totalFiles;
 //
 char 				currentFile[FILE_NAME_SIZE]; 						 // The current animation file we're on, assumining 8+3 filename
 //Runtime Variables
 long 				nodeTimeStamps[TOTAL_NODES]; 						 // Since defining arrays requires you put in the total number of elements, add 1
-long 				frameInterval 				= 50;             // Interval between frames
-long 				frameDuration 				=	100;              // Time a given  is on 
+long 				nodeDurations[TOTAL_NODES]; 						 // Array for disparaging durations
+long 				frameInterval 				= DEFAULT_FRAME_INTERVAL;             // Interval between frames
+long 				frameDuration 				=	DEFAULT_FRAME_DURATION;              // Time a given  is on 
 
 //Chillout mode
-bool 				chilloutMode 					= false;
-long 				chilloutInterval 			= 60*60*3; 					//Every 3 hours. //milliseconds until next chillout.
-long 				chilloutDuration 			= 60*5; 						//5 Minutes.
-long 				chilloutFrameInterval = 3000; 						//This is how long in between each frame in Chillout Mode
-long 				chilloutFrameDuration = 500; 							//The duration of the flame.
+// bool 				chilloutMode 					= false;
+// long 				chilloutInterval 			= 60*60*3; 					//Every 3 hours. //milliseconds until next chillout.
+// long 				chilloutDuration 			= 60*5; 						//5 Minutes.
+// long 				chilloutFrameInterval = 3000; 						//This is how long in between each frame in Chillout Mode
+// long 				chilloutFrameDuration = 500; 							//The duration of the flame.
+
 // Control Mode
 int 				controlMode 					= 1; 								//default: random;
 //Frame
 Frame 			frameBuffer;
-char 				messageBuffer[20];
+char 				messageBuffer[8];  												// Can't forsee more than 8c*s as long as we stay away from long pattern titles.
 char 				patterns;
 //
 int 				bufferIndex 					= 0; 								//This global manages the buffer index.
@@ -71,9 +76,7 @@ boolean 		debug 								= true;							// Where the frame is updated until we're 
 const 			prog_int8_t mappingArray_P[TOTAL_NODES] PROGMEM = { 31, 74, 29, 90, 37, 33, 44, 34, 67, 76, 80, 30, 93, 75, 20, 35, 21, 65, 41, 42, 59, 69, 58, 85, 52, 53, 95, 89, 79, 39, 19, 87, 8, 22, 46, 32, 70, 66, 61, 18, 36, 86, 83, 77, 73, 84, 28, 94, 9, 11, 55, 68, 57, 63, 60, 26, 38, 43, 15, 12, 91, 72, 88, 16, 92, 64, 47, 51, 81, 71, 62, 50, 49, 27, 78, 10, 17, 14, 13, 82, 40, 45, 54, 56, 23, 48, 0, 1, 2, 3, 4, 5, 6, 7, 24, 25 };
 
 boolean updateFrame(){
-	
-	// Serial.println("Update Frame");
-	
+		
   int8_t index=0;
   int8_t data_size=98;              									// This variable sets the number of bytes to read from the file.
   byte fileContents[data_size];          						 	// Temporary buffer to pull data from SD card
@@ -83,7 +86,7 @@ boolean updateFrame(){
   if(index == data_size ){
     for(int i = 0; i < data_size - 2 ; i++){ 					// -1 for cr at end of frame
       if(fileContents[i] == '1'){
-        int j = i;
+        int j = i;					
         if(i >= 32){ 																	// Dealing with the offsets in the file format
           j--;
         }
@@ -122,11 +125,11 @@ boolean getTotalFiles(){
 
 // AUTOPILOT!
 
-void goGoAutoPilot(){
-	//Here we would switch through progressive mode, random mode, chillout mode, and break mode (repeat)
-	//GoGoAutopolot is disrupted when there is serial information.
-	randomAnimation(); //for now let's call random animation.
-}
+// void goGoAutoPilot(){
+// 	//Here we would switch through progressive mode, random mode, chillout mode, and break mode (repeat)
+// 	//GoGoAutopolot is disrupted when there is serial information.
+// 	randomAnimation(); //for now let's call random animation.
+// }
 
 void randomAnimation(){
   int randNum = random(totalFiles);
@@ -169,21 +172,6 @@ void randomAnimation(){
   
 }
 
-/*************************************************************************************
- * Safety + Sustain
- * Checks for last successful serial request.
- *************************************************************************************/
-int progressionInt = 50;
-
-void progressiveAnimation(){
-		int numberMin = 20;
-		int numberMax = 200;
-		int increment = 10;
-		if(progressionInt <= numberMin || progressionInt >= numberMax) { increment = increment*-1; }
-		progressionInt = progressionInt + increment;	
-		frameInterval = progressionInt;
-}
-
 /*
 
 	 #####  ####### ####### #     # ######  
@@ -211,7 +199,7 @@ void setup(){
 	
 	delay(1000);
   
-  // Serial.begin(115200);
+  // Serial.begin(9600);
   Serial.begin(115200);
 	
 	Serial.println("One Sec");
@@ -244,13 +232,12 @@ boolean mount(){
   
 	Serial.print("Initializing Card. ");
 	
-	
 	//SD Settings.	
 	if (VERSION != 1) {
 		// DEFINE SDPIN depending on Uno or Mega chip ala: http://www.ladyada.net/learn/arduino/ethfiles.html
 
-		int 			chipSelect 						= 4;	 // for Arduino Ethernet Shield SD
-		int sdpin = 54;
+		chipSelect 									= 4;	 						// for Arduino Ethernet Shield SD
+		int sdpin									 = 54;
 		pinMode(sdpin, OUTPUT);                       // set the SS pin as an output (necessary!)
 		digitalWrite(sdpin, HIGH);                    // but turn off the W5100 chip!		
 	}
@@ -296,10 +283,6 @@ boolean mount(){
 	else 			 { return true; }
 }
 
-
-
-
-
 /*
 
 	#       ####### ####### ######  
@@ -324,10 +307,9 @@ static int8_t 			loopCount 			= loopThresh + 1;
 
 //autoPilot (right now random, let's diversify!)
 static boolean 			autoPilot 			= true;					//Initiates the pilot
-static long 				serialTimeout 	= 20000;				//How long after serial is silent will autoPilot begin.
+static uint16_t 		serialTimeout 	= 20000;				//How long after serial is silent will autoPilot begin.
 static long 				lastSerialCMD 	= 0;						//Last time a serial command was recieved
-int 								readMode 				= 0; 						//Wait
-int									systemMode 			= 0;    				//Random, 1: MasterController, 2: Valve Tracer
+uint8_t 						readMode 				= 0; 						//Wait
 
 void loop() 
 {
@@ -342,7 +324,11 @@ void loop()
 
   now = millis();       	// This moment is beautiful.
 	//
+	
 	flameSustain(); 				// Sustains flame based on each pin's last timestamp and current flameDuration
+	
+	
+	
 	//
 	// nextFrame();					// Select mode based on information.
 	modeSelektor();					// Select mode based on information.
@@ -360,6 +346,19 @@ void loop()
   // checkRemote();
 }
 
+void statusUpdate() {
+	// Serial.print("Is Dave there?");
+	Serial.println("<=== Pyrosphere Status Update ===>"); 
+	Serial.print("Frame Interval: ");
+	Serial.println(frameInterval); 
+	Serial.print("Frame Duration: ");
+	Serial.println(frameDuration); 
+	Serial.print("System Mode: ");
+	Serial.println(controlMode); 
+	
+	resetMessageBuffer();
+}
+
 void serialRouting(char x){
 	//Flags, set read mode., begin
 	if 				( x == '!' ) 		{		readMode 	= 1;  	}					//Pattern
@@ -369,6 +368,7 @@ void serialRouting(char x){
 	else if   ( x == '-' ) 		{		readMode 	= 5;  	}					//Shift Register IDs, separated by comma (no whitespace)
 	else if   ( x == '~' ) 		{		readMode 	= 6;  	}					//System Mode 
 	else if  	( x == '/' ) 		{		getFiles(); 			}		
+	else if  	( x == '?' ) 		{		statusUpdate(); 	}			
 	//Add custom flags here.
 	
 	//Finish up
@@ -445,9 +445,22 @@ void serialPolling(){
 
 void modeSelektor(){
 	long since = now - then;
+
+	/// do we need a switch for all this?
+
+	if (controlMode == 2) 	{
+		frameDuration = MAX_FRAME_DURATION;
+	} else {
+		/// We might want this to end up being a previous value instead of a default... 
+		frameDuration = DEFAULT_FRAME_DURATION;		
+	}
+		
+
 	if(since > frameInterval || since > MAX_FRAME_INTERVAL){  
 	  // Go to next frame
 		if (controlMode == 1) 	{nextFrame();}
+		
+		
 		// nextFrame();
 		// else if 	(controlMode == '2');	
 		
@@ -464,7 +477,7 @@ void nextFrame(){
       if(autoPilot){
 				// if 			(controlMode == '1') 	randomAnimation();
 				// else if 	(controlMode == '2') 	progressiveAnimation();
-				goGoAutoPilot();
+				randomAnimation();
       }
       loopCount = 0;
     } else {
@@ -518,6 +531,22 @@ void flameSustain(){
       }
     }
   }
+
+  // for(int i = 0; i < TOTAL_NODES; i++) {      // This loop turns off nodes based on their timestamp and how long each is to be on
+  //  		long onFor = now - nodeTimeStamps[i];
+  // 
+  // 		if(nodeTimeStamps[i] <= 0) continue; 
+  // 
+  // 		if (controlMode == 2 && (onFor > nodeDurations[i] || onFor > MAX_FRAME_DURATION)) {
+  // 			// if(){			
+  // 				nodeOff(i);
+  // 				// nodeDurations[i] = 0;
+  // 			// }
+  // 		} else if (onFor > frameDuration || onFor > MAX_FRAME_DURATION){
+  // 			  nodeOff(i);    
+  // 		}		      					
+  // }
+
 
 }
 
@@ -684,10 +713,6 @@ void flameSustain(){
 		initFrameBuffer();				//Sets everything to off.
 	}
 	
-	
-	
-
-
 	void resetMessageBuffer(){
 		memset( messageBuffer, '\0', sizeof(messageBuffer) );		
 	}
@@ -802,10 +827,6 @@ void flash(){
   digitalWrite(LATCH_PIN, HIGH);
 }
 
-void autoReply() {
-   Serial.println("Is Dave there?"); 
-}
-
 /*
 
                                                     
@@ -821,48 +842,46 @@ void autoReply() {
 		
 */
 
-
-/**
- * Digital read
- * @param char pin pin identifier
- */
-void dr(char *pin) {
-  if (debug) {
-    Serial.println("dr"); }
-    
-  int p = getPin(pin);
-  if (p == -1 && debug) {
-    Serial.println("badpin"); 
-  } else {
-    pinMode(p, INPUT);
-    int oraw = digitalRead(p);
-    char m[7];
-    sprintf(m, "%02d::%02d", p,oraw);
-    Serial.println(m);
-  }
-}
-
-int getPin(char *pin) { //Converts to A0-A5, and returns -1 on error
-  int ret = -1;
-  if (pin[0] == 'A' || pin[0] == 'a') {
-    switch(pin[1]) {
-      case '0': ret = A0; break;
-      case '1': ret = A1; break;
-      case '2': ret = A2; break;
-      case '3': ret = A3; break;
-      case '4': ret = A4; break;
-      case '5': ret = A5; break;
-      default:            break;
-    }
-  } else {
-    ret = atoi(pin);
-    if (ret == 0 && (pin[0] != '0' || pin[1] != '0')) {
-      ret = -1; }
-  }
-  
-  return ret;
-}
-
+// /**
+//  * Digital read
+//  * @param char pin pin identifier
+//  */
+// void dr(char *pin) {
+//   if (debug) {
+//     Serial.println("dr"); }
+//     
+//   int p = getPin(pin);
+//   if (p == -1 && debug) {
+//     Serial.println("badpin"); 
+//   } else {
+//     pinMode(p, INPUT);
+//     int oraw = digitalRead(p);
+//     char m[7];
+//     sprintf(m, "%02d::%02d", p,oraw);
+//     Serial.println(m);
+//   }
+// }
+// 
+// int getPin(char *pin) { //Converts to A0-A5, and returns -1 on error
+//   int ret = -1;
+//   if (pin[0] == 'A' || pin[0] == 'a') {
+//     switch(pin[1]) {
+//       case '0': ret = A0; break;
+//       case '1': ret = A1; break;
+//       case '2': ret = A2; break;
+//       case '3': ret = A3; break;
+//       case '4': ret = A4; break;
+//       case '5': ret = A5; break;
+//       default:            break;
+//     }
+//   } else {
+//     ret = atoi(pin);
+//     if (ret == 0 && (pin[0] != '0' || pin[1] != '0')) {
+//       ret = -1; }
+//   }
+//   
+//   return ret;
+// }
 
 /*
 
@@ -881,6 +900,8 @@ int getPin(char *pin) { //Converts to A0-A5, and returns -1 on error
 	   #    #   #   ####### #       #  #    #  #   # # #     # 
 	   #    #    #  #     # #     # #   #   #  #    ## #     # 
 	   #    #     # #     #  #####  #    # ### #     #  #####  
+	
+	O_o
 
 
 */
