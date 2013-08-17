@@ -1,4 +1,4 @@
-// loop.intval = false;
+LOOP = false;
 
 (function($){
 	
@@ -29,9 +29,9 @@
 		
 		var loop = $(self).data('Pyro.Loop');
 
-		if(loop.intval) clearInterval(loop.intval);
+		if(LOOP) clearInterval(LOOP);
 		
-		loop.intval = setInterval(function(  ){
+		LOOP = setInterval(function(  ){
 			var loop = $(self).data('Pyro.Loop');
 			for (var handle in loop.actions) {
 				// console.log(loop)
@@ -47,7 +47,7 @@
 				}
 			}
 			
-		}, 20);
+		}, 100);
 	}
 	
 	$.Pyro.Loop.Methods.blog = function(){
