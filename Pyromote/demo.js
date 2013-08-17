@@ -85,25 +85,30 @@ $(function(){
 				{ left : $(document).width(), top : $(document).height() } //right down
 			];
 			
-			watch(scope.status, 'mousedown', function(){
-			    console.log('Mousedown changed');
-			});
+			scope.$lineX = $('<div>');
+			scope.$lineY = $('<div>');
 			
-			watch(scope.status, 'idle', function(){
-			    console.log('Idle changed');
-			});
+			scope.$stats.appendTo(scope.$pointer.find('.zero'));
+			
+			// watch(scope.status, 'mousedown', function(){
+			    // console.log('Mousedown changed');
+			// });
+			
+			// watch(scope.status, 'idle', function(){
+			    // console.log('Idle changed');
+			// });
 		
 			
-			watch(scope.status.value, 'x', function(prop, action, newvalue, oldvalue){
+			// watch(scope.status.value, 'x', function(prop, action, newvalue, oldvalue){
 				// duration
 				// console.log('x change')
 			  // socket.emit('pipe', '@'+newValue.x || oldValue.x+'.');
-			});
+			// });
 			
-			watch(scope.status.value, function(prop, action, newvalue, oldvalue){
+			// watch(scope.status.value, function(prop, action, newvalue, oldvalue){
 				//interval
 				// socket.emit('pipe', '#'+newValue.y || oldValue.y+'.');
-			});
+			// });
 			
 			// watch(scope.timestamp, 'lastActivity', function(){
 			// 	    console.log('Activity')
@@ -122,12 +127,12 @@ $(function(){
 		//When there is a change in value (down or move)
 		xy.action.change = function( pos, event, scope ){
 			
-			var size = new Object();
-					size.x = normalize(scope.status.value.x, 20, 750, 40, 200, true ); // between 40 and 200, round it
-					size.y = normalize(scope.status.value.y, 20, 750, 40, 200, true ); // ^
+			// var size = new Object();
+					// size.x = normalize(scope.status.value.x, 20, 750, 40, 200, true ); // between 40 and 200, round it
+					// size.y = normalize(scope.status.value.y, 20, 750, 40, 200, true ); // ^
 					
-			scope.$stats.find('.x .value').css('font-size', size.x+'pt');
-			scope.$stats.find('.y .value').css('font-size', size.y+'pt');
+			// scope.$stats.find('.x .value').css('font-size', size.x+'pt');
+			// scope.$stats.find('.y .value').css('font-size', size.y+'pt');
 			
 			if(!$sphere.pyrosphere('get', 'active')) $sphere.pyrosphere('set', 'active', 1 );
 			
@@ -157,7 +162,7 @@ $(function(){
 			var average = (scope.status.pos.x + scope.status.pos.y) / 2;
 			var max = $grid.width() > $grid.height() ? $grid.width()  : $grid.height(); //Bigger of the two
 			var alpha = normalize(average, 0, max, 0.10, 0.60); //Normalize average between
-			$pointer.find('.gradient').css('opacity', alpha);
+			if(!scope.options.minimal) $pointer.find('.gradient').css('opacity', alpha);
 			
 			//Size
 			var raw = new Object();
@@ -183,7 +188,7 @@ $(function(){
 			
 			console.log('Hello world!');
 			
-			if(scope.options.sound) $.playSound('lib/sounds/positive.wav', 2000); 
+			if(scope.options.sound && !scope.options.minimal) $.playSound('lib/sounds/positive.wav', 2000); 
 			
 			scope.status.clicks = 1;
 			
@@ -193,8 +198,11 @@ $(function(){
 		xy.action.down = function( pos, event, scope ){ 
 			var $grid = $(this);	
 			scope.$pointer.css({ opacity : 1 });
-			if(scope.options.sound && scope.status.clicks > 1) $.playSound('lib/sounds/welcome.wav', 2000);
+			if(scope.options.sound && scope.status.clicks > 1 && !scope.options.minimal) $.playSound('lib/sounds/welcome.wav', 2000);
 			scope.status.clicks++;
+			
+			$('.toolbar').show();
+			
 			$grid.data('Pyro.Grid', scope) ;
 		}
 
@@ -207,14 +215,24 @@ $(function(){
 			
 			scope = $grid.data('Pyro.Grid');
 			
+			$('.toolbar').show();
+			
 			if(!scope.options.hold) {
 				
+				if(!scope.options.minimal) {
+				
 				var trans = scope.transitions[rand];
-						trans.easing = 'easeInExpo';
-						trans.opacity = 0;
-						scope.$pointer.stop().animate(trans, 200, function(){
-									// scope.$pointer.css({ left : scope.$pointer.width()*-1, top : scope.$pointer.width()*-1 });
-						});
+				
+					trans.easing = 'easeInExpo';
+					trans.opacity = 0;
+					scope.$pointer.stop().animate(trans, 200, function(){});
+				
+				} else {
+					
+					scope.$pointer.stop().css(trans);
+					
+				}
+						
 						
 				$sphere.pyrosphere('set', 'active', 0);
 				$sphere.pyrosphere('process');
@@ -239,12 +257,13 @@ $(function(){
 			pressdown : xy.action.down,
 			pressup : xy.action.up,
 			alterValue : xy.action.normalize,
-			pointer : xy.action.pointer,
+			minimal : true,
+			// pointer : xy.action.pointer,
 			change : xy.action.change,
 			setup : xy.action.setup,
 			firstActivity : xy.action.firstActivity,
 			idleEnd : xy.action.idleEnd,
-			$loop : $loop
+			// $loop : $loop
 			
 		}
 		
@@ -258,7 +277,7 @@ $(function(){
 
 		enableHotkeys : true,
 		queueTimeout : 5555,
-		$loop : $loop,
+		// $loop : $loop,
 		
 		onqueue : function( scope ){
 			var self = this;
