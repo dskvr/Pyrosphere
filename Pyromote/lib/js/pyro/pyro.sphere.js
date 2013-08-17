@@ -10,6 +10,7 @@
 			refreshRate : 20,
 			frameInterval : 400,
 			frameDuration : 400,
+			valve : -1,
 			pattern : '00',
 			active : 0,
 			//
@@ -53,7 +54,6 @@
 			scope.options[key] = value;
 			$(this).data('Pyro.Sphere', scope);
 			$.Pyro.Sphere.Buffer.apply( this, [ key, value ]);
-			
 			return true;
 		}
 		
@@ -96,12 +96,14 @@
 			if(key == 'pattern') 				prefix += '!';
 			if(key == 'frameDuration') 	prefix += '@';
 			if(key == 'frameInterval') 	prefix += '#';
+			if(key == 'valveOn') 				prefix += '+';
+			if(key == 'valveOff') 			prefix += '-';
 			
 			// scope.checkActivity();
 			
 			scope.request += prefix+(value)+'.';
 			
-			 $(this).data('Pyro.Sphere', scope);
+			$(this).data('Pyro.Sphere', scope);
 			
 		}
 		
@@ -123,9 +125,10 @@
 		}
 		//
 		
-		$.Pyro.Sphere.send = function( request ) {
+		$.Pyro.Sphere.Methods.send = function( request ) {
 			var scope = $(this).data('Pyro.Sphere');
 			//Make sure this is properly formatted!
+			scope.socket.emit('pyro.pipe', request);
 			// scope.socket.emit('pyro.pipe', request);
 		}
 		
@@ -167,11 +170,6 @@
 			var scope = $(this).data('Pyro.Sphere');
        // scope.socket.emit('sphere.active', 1);
     };
-    
-    $.Pyro.Sphere.defaultOptions = {
-			
-    };
-
 		$.fn.pyrosphere = function( method ){
 				var methods = $.Pyro.Sphere.Methods;
 
