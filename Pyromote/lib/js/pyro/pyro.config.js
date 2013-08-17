@@ -42,12 +42,12 @@ $(function($){
 	//Flame Duration
 	$.Pyro.Config.Limits.Interval = new Object();
 	$.Pyro.Config.Limits.Interval.Min = 40;
-	$.Pyro.Config.Limits.Interval.Max = 750;
+	$.Pyro.Config.Limits.Interval.Max = 200;
 	
 	//Flame Duration Limits
 	$.Pyro.Config.Limits.Duration = new Object();
 	$.Pyro.Config.Limits.Duration.Min = 40;
-	$.Pyro.Config.Limits.Duration.Max = 2000;
+	$.Pyro.Config.Limits.Duration.Max = 300;
 	
 	$.Pyro.Config.Limits.IdleThreshold = 60*1000; //sixty seconds.
 	

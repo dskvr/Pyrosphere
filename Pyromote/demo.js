@@ -88,7 +88,7 @@ $(function(){
 			scope.$lineX = $('<div>');
 			scope.$lineY = $('<div>');
 			
-			scope.$stats.appendTo(scope.$pointer.find('.zero'));
+			// scope.$stats.appendTo(scope.$pointer.find('.zero'));
 			
 			// watch(scope.status, 'mousedown', function(){
 			    // console.log('Mousedown changed');
@@ -251,7 +251,7 @@ $(function(){
 			labelX : 'Duration',
 			labelY : 'Interval',
 			// noMouseClick : true,
-			hold : true,
+			hold : false,
 			// useX : false,
 			pressmove : xy.action.move,
 			pressdown : xy.action.down,

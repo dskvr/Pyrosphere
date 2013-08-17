@@ -189,7 +189,7 @@
 		$.Pyro.Grid.Events.MouseUp = function( event ){
 			var scope = $(this).data('Pyro.Grid');
 			
-			if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
+			// if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
 			
 			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
 				if(!scope.options.hold) {
@@ -210,9 +210,13 @@
 			
 			var scope = $(this).data('Pyro.Grid');
 			var pos = { x: event.pageX, y: event.pageY };
+			
+			if(!scope.status.mousedown) return;
+			
 			// if(!$.Pyro.Grid.inBounds.apply( this, [pos, scope] )) return;
 			
 			$.Pyro.Grid.Status.Update.apply(this, [ pos, event, scope ]);
+			
 			scope.options.pressmove.apply( this , [pos, event, scope] );
 			scope.options.change.apply( this , [pos, event, scope] );
 			

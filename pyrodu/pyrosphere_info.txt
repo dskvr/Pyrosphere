@@ -1,0 +1,14 @@
+PYROSPHERE ARDUINO PINMAP V1
+
+LCH -> 2  (BROWN)
+CLK -> 6  (YELLOW)
+I/O -> 7  (YELLOW)
+
+GND ->   (BLACK) 
+5V ->   (ORANGE)
+
+
+VERSION 2
+Switch VERSION #define to 2 for Arduino Mega w/ Ethernet SD reader.
+Pinmap is the same.
+	

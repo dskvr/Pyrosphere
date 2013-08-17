@@ -72,9 +72,10 @@
 			
 			if(now - scope.status.lastRequest < scope.options.refreshRate && !forceSend) return; //Useful for mouseup.
 			
-			console.log(scope.request);
 			
 			scope.status.lastRequest = now;
+			
+						console.log(scope.request);
 			
 			scope.socket.emit('pyro.pipe', scope.request);
 			
