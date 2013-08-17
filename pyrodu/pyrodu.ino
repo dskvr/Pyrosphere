@@ -6,7 +6,7 @@
 // #include 		<SdFatUtil.h>
 
 // Conversion for old pyrosphere model with sparkfun SD reader.
-#define VERSION 1
+#define VERSION 2
 
 // Pin values for talking to shift registers
 #define 		DATA_PIN 									7 // Data pin for serial communication to shift registers
@@ -523,29 +523,27 @@ void nextFrame(){
 void flameSustain(){
 
 	//Check for length the
-  for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
-		long onFor = now - nodeTimeStamps[i];
-    if(nodeTimeStamps[i] > 0){
-      if(onFor > frameDuration || onFor > MAX_FRAME_DURATION){
-        nodeOff(i);
-      }
-    }
-  }
-
-  // for(int i = 0; i < TOTAL_NODES; i++) {      // This loop turns off nodes based on their timestamp and how long each is to be on
-  //  		long onFor = now - nodeTimeStamps[i];
-  // 
-  // 		if(nodeTimeStamps[i] <= 0) continue; 
-  // 
-  // 		if (controlMode == 2 && (onFor > nodeDurations[i] || onFor > MAX_FRAME_DURATION)) {
-  // 			// if(){			
-  // 				nodeOff(i);
-  // 				// nodeDurations[i] = 0;
-  // 			// }
-  // 		} else if (onFor > frameDuration || onFor > MAX_FRAME_DURATION){
-  // 			  nodeOff(i);    
-  // 		}		      					
+  // for(int i = 0; i < TOTAL_NODES; i++){      // This loop turns off nodes based on their timestamp and how long each is to be on
+  // 		long onFor = now - nodeTimeStamps[i];
+  //   if(nodeTimeStamps[i] > 0){
+  //     if(onFor > frameDuration || onFor > MAX_FRAME_DURATION){
+  //       nodeOff(i);
+  //     }
+  //   }
   // }
+
+  for(int i = 0; i < TOTAL_NODES; i++) {      // This loop turns off nodes based on their timestamp and how long each is to be on
+   		long onFor = now - nodeTimeStamps[i];
+  
+  		if(nodeTimeStamps[i] <= 0) continue; 
+  
+  		if (controlMode == 2 && (onFor > nodeDurations[i] || onFor > MAX_FRAME_DURATION)) {		
+  				nodeOff(i);
+  				nodeDurations[i] = 0;
+  		} else if (onFor > frameDuration || onFor > MAX_FRAME_DURATION){
+  			  nodeOff(i);    
+  		}		      					
+  }
 
 
 }
@@ -635,6 +633,7 @@ void flameSustain(){
 			}
 
 		  nodeOn(valveID);
+			nodeDurations[valveID] = frameDuration;
 		}		
 		
 		resetMessageBuffer();		
