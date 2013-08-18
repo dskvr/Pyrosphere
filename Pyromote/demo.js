@@ -215,11 +215,11 @@ $(function(){
 			
 			scope = $grid.data('Pyro.Grid');
 			
-			$('.toolbar').show();
+			// $('.toolbar').show();
 			
 			if(!scope.options.hold) {
 				
-				if(!scope.options.minimal) {
+				// if(!scope.options.minimal) {
 				
 				var trans = scope.transitions[rand];
 				
@@ -227,11 +227,11 @@ $(function(){
 					trans.opacity = 0;
 					scope.$pointer.stop().animate(trans, 200, function(){});
 				
-				} else {
+				// } else {
 					
-					scope.$pointer.stop().css(trans);
+					// scope.$pointer.stop().css(trans);
 					
-				}
+				// }
 						
 						
 				$sphere.pyrosphere('set', 'active', 0);
@@ -251,14 +251,14 @@ $(function(){
 			labelX : 'Duration',
 			labelY : 'Interval',
 			// noMouseClick : true,
-			hold : false,
+			hold : true,
 			// useX : false,
 			pressmove : xy.action.move,
 			pressdown : xy.action.down,
 			pressup : xy.action.up,
 			alterValue : xy.action.normalize,
 			minimal : true,
-			// pointer : xy.action.pointer,
+			pointer : xy.action.pointer,
 			change : xy.action.change,
 			setup : xy.action.setup,
 			firstActivity : xy.action.firstActivity,
