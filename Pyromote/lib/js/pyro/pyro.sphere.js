@@ -38,7 +38,6 @@
 			// $('script[name=socket]').attr('src', $.Pyro.Config.URI.Socket+'/socket.io/socket.io.js');			
 			scope.socket = io.connect($.Pyro.Config.URI.Socket);			
 
-
 			// if(!scope.options.$grid) return;
 			
 			$(this).data('Pyro.Sphere', scope);
@@ -129,6 +128,7 @@
 		$.Pyro.Sphere.Methods.send = function( request ) {
 			var scope = $(this).data('Pyro.Sphere');
 			//Make sure this is properly formatted!
+			console.log( request );
 			scope.socket.emit('pyro.pipe', request);
 			// scope.socket.emit('pyro.pipe', request);
 		}

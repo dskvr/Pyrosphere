@@ -220,11 +220,13 @@
 	}
 	
 	$.Pyro.Queue.Methods.changeTimeout = function( val ){
+		
 		var min = 1000;
 		val = val < min ? min : val;
 		var scope = $(this).data('Pyro.Queue');
 		scope.options.queueTimeout = val;
 		$(this).data('Pyro.Queue', scope);
+		
 	}
 	
 	$.Pyro.Queue.HTML = function( ){

@@ -118,7 +118,6 @@
 
 			var scope = $(this).data('Pyro.Grid');	
 			var now = new Date().getTime();
-		
 			
 			if(scope.status.timestamp.lastActivity < 0) 	scope.options.firstActivity.apply( this, [ pos, event, scope ]);
 			if(scope.status.idle) 												$.Pyro.Grid.Idle.end.apply( this, [pos, event, scope] );
@@ -189,7 +188,7 @@
 		$.Pyro.Grid.Events.MouseUp = function( event ){
 			var scope = $(this).data('Pyro.Grid');
 			
-			// if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
+			if(!scope.status.mousedown) return; //May not be active if mousedown occured on a different grid!
 			
 			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
 				if(!scope.options.hold) {
