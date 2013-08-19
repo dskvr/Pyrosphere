@@ -1,0 +1,7 @@
+body { background:#000; }
+
+#scope-tapper { width:100%;height:100px; background:#fff; }
+
+#scope-tapper.active {background:red;}
+
+#thing { width:100px;height:100px; color:magenta; position:absolute; top:350px; left:450px;}
