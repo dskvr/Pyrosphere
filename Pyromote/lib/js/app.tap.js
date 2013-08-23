@@ -2,7 +2,9 @@ $(function(){
 	
 	var $app = $('body');
 	var $sphere = $app.pyrosphere();
-	var $tap = $('#tap-it').pyrotap({
+	var $tap = $('.tap-details').pyrotap({
+		
+		tapperSelector : '.tap.button',
 		
 		setup : function( ){
 			var scope = $(this).data('Pyro.Tap');
@@ -10,13 +12,14 @@ $(function(){
 					scope.beats = 0;
 		},
 		beforetap : function( scope ){
-			console.log('Tapped!');
+			// console.log('Tapped!');
 			if(scope.count < 1) $('body').stop().css({ 'background-color' : '#000000' });
 		},
 		aftertap : function( scope , status ){
-			console.log(scope);
+			// console.log(scope);
 		},
 		onbeat : function(){
+			
 			console.log('beat');
 			
 			var scope = $(this).data('Pyro.Tap');
@@ -37,12 +40,12 @@ $(function(){
 				// var $tap = $(self);
 				return Math.round(scope.status.millis / 2);
 			}
-			
+			//
 			$sphere.pyrosphere('send', '*2.');
 			$sphere.pyrosphere('set', 'frameDuration', duration() );
 			$sphere.pyrosphere('set', 'frameInterval', interval() );
 			$sphere.pyrosphere('process');
-			
+			//
 		},
 		onreset : function ( ) {
 			var self = this;
@@ -65,7 +68,7 @@ $(function(){
 			$sphere.pyrosphere('set', 'frameDuration', duration() );
 			$sphere.pyrosphere('set', 'frameInterval', interval() );
 			$sphere.pyrosphere('process');
-			
+			//
 		}
 	});
 	
