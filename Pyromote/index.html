@@ -7,6 +7,7 @@
 	<title></title>
 	<link rel="stylesheet" type="text/css" media="screen" href="lib/fonts/css/raleway.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="lib/fonts/css/nova-square.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="lib/css/tap.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="lib/css/xy-control.css" />
 
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
@@ -19,6 +20,7 @@
 	<script type="text/javascript" src="lib/js/vendor/jquery.js"></script>
 	<script type="text/javascript" src="lib/js/vendor/jquery.easing.js"></script>
 	<script type="text/javascript" src="lib/js/vendor/jquery.hotkeys.js"></script>
+	<script type="text/javascript" src="lib/js/vendor/jquery.color.js"></script>
 	<script type="text/javascript" src="lib/js/vendor/jquery.playsound.js"></script>
 	
 	<script name="socket" src="http://192.168.1.100:3000/socket.io/socket.io.js"></script>
@@ -31,8 +33,10 @@
 	<script type="text/javascript" src="lib/js/pyro/pyro.grid.js"></script>
 	<script type="text/javascript" src="lib/js/pyro/pyro.sphere.js"></script>
 	<script type="text/javascript" src="lib/js/pyro/pyro.motions.js"></script>
+	<script type="text/javascript" src="lib/js/pyro/pyro.tap.js"></script>
 	<script type="text/javascript" src="lib/js/pyro/pyro.loop.js"></script>
 	
+	<script type="text/javascript" src="lib/js/app.tap.js"></script>
 	<script type="text/javascript" src="lib/js/app.xy.js"></script>
 
 	<script type="text/javascript">
@@ -75,7 +79,7 @@
 			
 			<div id="grid"></div>
 			
-			<div id="toolbar">
+			<div id="toolbar" class="hide-during-activity">
 				<div class="inner">
 					<span class="toggle"></span>
 					<ul class="options">
@@ -86,17 +90,58 @@
 				</div>
 			</div>
 			
-		</article>
-		
-		<!-- <article id="sliders" class="mode container">
+			<div id="preferences" class="hide-during-activity">
+				
+				<div class="hold button">Hold</div>
+
+				<div class="tap button">Tap</div>
+				
+				<div class="tap-details">
+					
+				</div>
+				
+				<div class="advanced-toggle button">Advanced Prefs</div>
+				
+				<div class="advanced-preferences">
+				 
+					<div class="hold-release inputs">  
+
+						<span>After release...</span>
+						<input type="checkbox" name="hold-release" id="after-hold-do-nothing" value="0" /> <label for="after-hold-do-nothing">Do nothing</label>
+						<input type="checkbox" name="hold-release" id="after-hold-change-pattern" value="1" /> <label for="after-hold-change-pattern">Change Pattern</label>
+
+					</div>
+
+					<div class="xy-scale inputs">
+
+						<div class="x-scale">
+							<span class="title">X Scale (duration)</span>
+							<span class="min"><label>Min</label><input name="x-min" /></span>
+							<span class="max"><label>Max</label><input name="x-max" /></span>
+						</div>
+
+						<div class="y-scale inputs">
+							<span class="title">X Scale (duration)</span>
+							<span class="min"><label>(y) Duration Min</label><input name="y-min" /></span>
+							<span class="max"><label>(y) Duration Max</label><input name="y-max" /> </span>						
+						</div>
+
+					</div>
+					
+				</div>
+				
+				<div class="force-hide">
+				</div>
+				
+			</div>
 			
+		</article>
+		<!-- <article id="sliders" class="mode container">
 			<div id="duration" class="grid-third"></div>
 			<div id="pattern" class="grid-third"></div>
 			<div id="interval" class="grid-third"></div>
 						<div id="dummy" class="grid-third"></div>
-			
 		</article> -->
-		
 		<!-- <article id="valves">
 					
 					<div class="row-1">
@@ -118,18 +163,10 @@
 					<div class="row-9"></div>
 					
 				</article> -->
-		
-		
-		
 	<!-- 		<article id="tracer">
-				
 			</article> -->
 	</section>
-	
 	<!-- <section id="patterns" role="patterns"></section> -->
-	
-
-	
 	<section role="xaxis"></section>
 	<section role="yaxis"></section>
 </body>
