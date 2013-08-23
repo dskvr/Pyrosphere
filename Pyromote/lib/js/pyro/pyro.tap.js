@@ -12,6 +12,7 @@ scope =false;
 	$.Pyro.Tap.Methods = new Object();
 	
 	$.Pyro.Tap.DefaultOptions = {
+		tapperSelector : false,
 		setup : function( scope ){ },
 		beforetap : function( scope ){ },
 		aftertap : function( scope ){ },
@@ -34,6 +35,8 @@ scope =false;
 		scope.count = 0;
 		
 		$(self).data('Pyro.Tap', scope);
+		
+		scope.cacheBG = $('body').css('background-color');
 	
 		$.Pyro.Tap.HTML.apply( this );
 		$.Pyro.Tap.Bind.apply( this );
@@ -41,7 +44,6 @@ scope =false;
 		scope.setup.apply( this , [ scope ] );	
 		
 		scope.timeout = false;
-		// $.Pyro.Tap.Reset.apply(self);
 		
 		return this;
 		
@@ -59,6 +61,31 @@ scope =false;
 		
 	}
 	
+	$.Pyro.Tap.Methods.reset = function( scope ) {
+		
+		var scope = $(this).data("Pyro.Tap");
+		
+		$('body').css('background', scope.cacheBG);
+
+		clearTimeout(scope.timeout);
+		
+		console.log('resetting');
+		
+		scope.$average.attr('value', null);
+		scope.$whole.attr('value', null);
+		scope.$tap.attr('value', null);
+		scope.$millis.attr('value', null);
+		scope.$wait.attr('value', null);
+		
+		scope.status.average 	= scope.$average.attr('value'),
+		scope.status.whole 		= scope.$whole.attr('value'),
+		scope.status.taps 		= scope.$tap.attr('value'),
+		scope.status.millis 	= scope.$millis.attr('value') * scope.status.multiplier,
+		scope.status.timeout 	= scope.$wait.attr('value');
+		
+		$(this).data("Pyro.Tap", scope);
+	}
+	
 	$.Pyro.Tap.Methods.tap = function( scope ){
 		
 		var self = this;
@@ -71,7 +98,7 @@ scope =false;
 		// scope.$wait.blur();
 	  scope.timeSeconds = new Date;
 	  scope.millis = scope.timeSeconds.getTime();
-	
+		
 	  if ((scope.millis - scope.millisPrevious) > 3000) {
 	    scope.count = 0;
 	    }
@@ -89,7 +116,7 @@ scope =false;
 	    scope.$tap.attr('value', scope.count);
 			scope.$millis.attr('value', Math.round( $.Pyro.Tap.Methods.convertToMillis( scope ) ) );
 	   }
-	
+		
 		scope.status.average 	= scope.$average.attr('value'),
 		scope.status.whole 		= scope.$whole.attr('value'),
 		scope.status.taps 		= scope.$tap.attr('value'),
@@ -138,13 +165,16 @@ scope =false;
 		});
 		
 		scope.$tapper.bind('touchend mouseup', function( event ){
+			
 			event.preventDefault();
 			var $tap = $(self);
 			var scope =$tap.data('Pyro.Tap');
 					$.Pyro.Tap.Methods.untap.apply( self, [ scope ] );
+					
 		});
 		
 		scope.$multiplier.on('change', function(){
+			
 			var $tap = $(self);
 			var scope = $tap.data('Pyro.Tap');
 			var $selected = $(this).find('option:selected');
@@ -165,7 +195,7 @@ scope =false;
 		var self = this;
 		var $container = $(self);
 		
-		var scope =$container.data('Pyro.Tap');
+		var scope = $container.data('Pyro.Tap');
 		
 		console.log(scope);
 				
@@ -175,8 +205,12 @@ scope =false;
 				scope.$average = $('<input>').appendTo($container)
 				scope.$average.attr('id', 'scope-average');
 				//
-				scope.$tapper = $('<div>').appendTo($container)
-				scope.$tapper.attr('id', 'scope-tapper');
+				if(scope.tapperSelector.length && $(scope.tapperSelector).length) {
+					scope.$tapper = $(scope.tapperSelector);
+				} else {
+					scope.$tapper = $('<div>').appendTo($container)
+					scope.$tapper.attr('id', 'scope-tapper');
+				}
 				//
 				scope.$tap =  $('<input>').appendTo($container)
 				scope.$tap.attr('id', 'scope-tap');
@@ -197,16 +231,15 @@ scope =false;
 				scope.$millis = $('<input>').appendTo($container);
 				scope.$millis.attr('id', 'scope-millis');
 				//
-				scope.$stepper = $('<div></div>').appendTo($container);
-				scope.$stepper.attr('id', 'scope-millis');
+				// scope.$stepper = $('<div></div>').appendTo($container);
+				// scope.$stepper.attr('id', 'scope-stepper');
 				//
-				scope.$represent = $('<div>').appendTo($container)
-				scope.$represent.attr('id', 'scope-millis');
+				// scope.$represent = $('<div>').appendTo($container)
+				// scope.$represent.attr('id', 'scope-represent');
 				
 		$container.data('Pyro.Tap', scope);
 	
 	}
-	
 	
 	$.fn.pyrotap = function( method ){
 			
