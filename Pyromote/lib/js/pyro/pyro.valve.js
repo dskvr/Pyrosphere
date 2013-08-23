@@ -1,3 +1,5 @@
+var THRESH = 50;
+
 var collides = (function () {
 	
     function getPositions( elem ) {
@@ -110,9 +112,12 @@ var collides = (function () {
 			
 			var self = this;
 			$container = $(this);
+			
 
 			event.preventDefault();
 			var scope = $(this).data('Pyro.Valves');		
+			
+			var now = new Date().getTime();
 
 			if(scope.pressing != true) return;
 	
@@ -124,11 +129,44 @@ var collides = (function () {
 			
 			$container.find('.valve').each(function( valveindex ){
 				
-				if( collides( $box, this ) && scope.valves[valveindex] == 0 )
-					{ scope.options.valveon.apply( self, [ valveindex, scope, event ]);  }
-				else if(scope.valves[valveindex] == 1) 		
-					{ scope.options.valveoff.apply( self, [ valveindex, scope, event ]); }
-				
+					var $valve = $(this);
+
+					// if(scope.valves[valveindex] == 1) return;
+					var now = new Date().getTime();
+					var diff = now - scope.lastCollisionCheck;
+					
+					if (diff < THRESH) return;
+					
+					scope.lastCollisionCheck = now;
+					var collision = collides( $box, this );
+
+					if( collision && scope.valves[valveindex] == scope.currentValve) {
+						//do nothing
+						console.log('collision, but already collided.')
+						return false;
+					} else if( collision && scope.valves[valveindex] == 0 )
+						{ 
+							console.log('new collision');
+							$valve.addClass('active');
+							scope.currentValve = valveindex; 
+							$(self).data('Pyro.Valves', scope);
+							// if(scope.currentValve == valveindex) return;
+							
+							scope.options.valveon.apply( self, [ valveindex, scope, event ]);  
+						}
+					else if(scope.valves[valveindex] == 1 ) 		
+						{ 
+							console.log('no longer collided');
+							$valve.removeClass('active');
+							if(scope.currentValve == valveindex) return;
+							scope.valves[valveindex] = 0;
+							$(self).data('Pyro.Valves', scope);
+							
+							scope.options.valveoff.apply( self, [ valveindex, scope, event ]); 
+						} else {
+							console.log('nope.')
+						}
+						
 			});
 			
 			$container.data('Pyro.Valves', scope);
@@ -189,25 +227,51 @@ var collides = (function () {
 			
 			// $('body').css('background', '#fff')
 			
-			if(!scope.last || now - scope.last > 50) {
+			if(!scope.last || now - scope.last > 20) {
 				$('.pointer').css(pos);	
 				scope.last = now;
 			}
 		
 			var $box = $('.pointer', $container);
 			
-			scope.options.valveon.apply( self, [ 1, scope, event ]);
-					
-					$container.find('.valve').map(function( valveindex ){
-						
-						// if(scope.valves[valveindex] == 1) return;
-						
-						if( collides( $box, this ) && scope.valves[valveindex] == 0 )
-							{ scope.options.valveon.apply( self, [ valveindex, scope, event ]);  }
-						// else if(scope.valves[valveindex] == 1 ) 		
-							// { scope.options.valveoff.apply( self, [ valveindex, scope, event ]); }
-						
-					});
+			// scope.options.valveon.apply( self, [ 1, scope, event ]);
+			
+
+			$container.find('.valve').map(function( valveindex ){
+				
+				var $valve = $(this);
+				
+				// if(scope.valves[valveindex] == 1) return;
+				var now = new Date().getTime();
+				var diff = now - scope.lastCollisionCheck;
+				if (diff < THRESH) return;
+				scope.lastCollisionCheck = now;
+				var collision = collides( $box, this );
+				
+				if( collides && scope.valves[valveindex] == scope.currentValve) {
+					//do nothing
+					console.log('collision, but already collided.')
+					return false;
+				} else if( collides && scope.valves[valveindex] == 0 )
+					{ 
+						console.log('new collision');
+						$valve.addClass('active');
+						scope.currentValve = valveindex; 
+						$(self).data('Pyro.Valves', scope);
+						// if(scope.currentValve == valveindex) return;
+						scope.options.valveon.apply( self, [ valveindex, scope, event ]);  
+					}
+				else if(scope.valves[valveindex] == 1 ) 		
+					{ 
+						onsole.log('no longer collided');
+						$valve.removeClass('active');
+						if(scope.currentValve == valveindex) return;
+						scope.valves[valveindex] = 0;
+						$(self).data('Pyro.Valves', scope);
+						scope.options.valveoff.apply( self, [ valveindex, scope, event ]); 
+					}
+				
+			});
 			
 			$container.data('Pyro.Valves', scope);
 			
@@ -216,7 +280,7 @@ var collides = (function () {
 		}
 		
 		$.Pyro.Valve.Events.TouchEnter = function( event ){
-			$(this).css('background', 'red')
+			$(this).css('background', 'red');
 		}
 		
 			$.Pyro.Valve.Events.valveonMouse = function( event ){
