@@ -8,14 +8,39 @@
 $(function(){
 	
 	var pyro = new Object();
+	
+	// Configuration
+	var breakAfter = 2000;
+	
+	var breakTimeout = false; // placeholder for window timeout.
 	// var pyro.ui = $.pyroUI();
 	// var pyro.sphere = new Sphere( $('body') );
 	
 	var $app = $('body');
-	var $sphere = $app.pyrosphere();
-	var $loop = $app.pyroloop();
+	var $sphere = $app.pyrosphere( { refreshRate : 60 } );
+	// var $loop = $app.pyroloop();
+	
+	var holdToggle = function(){
+		var scope = $('#grid').data('Pyro.Grid');
+		$(this).toggleClass('active');
+		if(!scope.options.hold) 			holdOn.apply( this );
+		else 													holdOff.apply( this );
+	}
+	
+	var holdOn = function(){
+		var scope = $('#grid').data('Pyro.Grid');
+		scope.options.hold = true;
+		$('#grid').data('Pyro.Grid', scope);
+	}
+	
+	var holdOff = function(){
+		var scope = $('#grid').data('Pyro.Grid');
+		scope.options.hold = false;
+		$('#grid').data('Pyro.Grid', scope);
+	}
 	
 	var xy = new Object();
+	
 		xy.action = new Object();
 		xy.status = new Object();
 		
@@ -66,6 +91,8 @@ $(function(){
 			xy.status.normalized.duration = Math.round(normalize(xy.status.oriented.duration, 0, xy.status.limits.duration, $.Pyro.Config.Limits.Duration.Min, $.Pyro.Config.Limits.Duration.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)
 			xy.status.normalized.interval = Math.round(normalize(xy.status.oriented.interval, 0, xy.status.limits.interval, $.Pyro.Config.Limits.Interval.Min, $.Pyro.Config.Limits.Interval.Max)); //no less than 30 MS, no longer than 750 ms. (flameDuration)	
 		
+			// !myvar; //true false
+		
 		}
 		
 		//Function is called when grid is setup.
@@ -85,39 +112,8 @@ $(function(){
 				{ left : $(document).width(), top : $(document).height() } //right down
 			];
 			
-			scope.$lineX = $('<div>');
-			scope.$lineY = $('<div>');
-			
-			// scope.$stats.appendTo(scope.$pointer.find('.zero'));
-			
-			// watch(scope.status, 'mousedown', function(){
-			    // console.log('Mousedown changed');
-			// });
-			
-			// watch(scope.status, 'idle', function(){
-			    // console.log('Idle changed');
-			// });
-		
-			
-			// watch(scope.status.value, 'x', function(prop, action, newvalue, oldvalue){
-				// duration
-				// console.log('x change')
-			  // socket.emit('pipe', '@'+newValue.x || oldValue.x+'.');
-			// });
-			
-			// watch(scope.status.value, function(prop, action, newvalue, oldvalue){
-				//interval
-				// socket.emit('pipe', '#'+newValue.y || oldValue.y+'.');
-			// });
-			
-			// watch(scope.timestamp, 'lastActivity', function(){
-			// 	    console.log('Activity')
-			// 			if(scope.status.timestamp)
-			// 	});
-			
-			
-			
-			scope.options.sound = true;
+			$('.button.hold').bind('click', holdToggle)	;
+			if(scope.options.hold) $('.button.hold').addClass('active');
 			
 			$grid.data('Pyro.Grid', scope);
 			
@@ -182,6 +178,7 @@ $(function(){
 		}
 		
 		xy.action.firstActivity = function( pos, event, scope){
+			
 			var self = this;
 			var $grid = $(self);
 			scope.status.idle = false;
@@ -193,6 +190,7 @@ $(function(){
 			scope.status.clicks = 1;
 			
 			$grid.data('Pyro.Grid', scope) ;
+			
 		}
 
 		xy.action.down = function( pos, event, scope ){ 
@@ -201,38 +199,40 @@ $(function(){
 			if(scope.options.sound && scope.status.clicks > 1 && !scope.options.minimal) $.playSound('lib/sounds/welcome.wav', 2000);
 			scope.status.clicks++;
 			
-			$('.toolbar').show();
+			$('.tap-details').pyrotap('reset');
+			
+			clearTimeout(breakTimeout);
+			$('.hide-during-activity').hide();
 			
 			$grid.data('Pyro.Grid', scope) ;
 		}
 
 		xy.action.up = function( event, scope ){
+			
+			// alert('touch end');
+			
 			var $grid = $(this);
-			
+
 			var rand = Math.round(Math.random() * (scope.transitions.length-1) );
-			
-			xy.action.setup.apply( this, [ scope ] );
 			
 			scope = $grid.data('Pyro.Grid');
 			
-			// $('.toolbar').show();
+			// $('.hide-during-activity').show();
 			
+			clearTimeout(breakTimeout);
+			breakTimeout = setTimeout(function(){
+				console.log('breaking');
+				$('.hide-during-activity').fadeIn(300);
+			}, breakAfter);
+
 			if(!scope.options.hold) {
-				
-				// if(!scope.options.minimal) {
 				
 				var trans = scope.transitions[rand];
 				
 					trans.easing = 'easeInExpo';
 					trans.opacity = 0;
+					
 					scope.$pointer.stop().animate(trans, 200, function(){});
-				
-				// } else {
-					
-					// scope.$pointer.stop().css(trans);
-					
-				// }
-						
 						
 				$sphere.pyrosphere('set', 'active', 0);
 				$sphere.pyrosphere('process');
@@ -297,6 +297,8 @@ $(function(){
 		
 		onselect : function( scope, event ){
 			
+			$('.tap-details').pyrotap('reset');
+			
 			//If enough time has passed...
 			$sphere.pyrosphere('set', 'pattern', scope.current.data.filename);
 			$sphere.pyrosphere('process');
@@ -305,28 +307,31 @@ $(function(){
 		
 	}
 	
-	$loop.pyroloop('addAction', 'timeElapsed', function(){
-		
-		var time = $app.data('Pyro.Time');
-		
-		if(!time) time = { started : new Date().getTime(), elapsed : 0, now : new Date().getTime(), last : new Date().getTime() };
-			
- 		var last = time.now;
-		time.now = new Date().getTime()
-		time.elapsed = time.started - last;
-		// console.log(Math.round(time.elapsed / 1000)*-1)
-
-		$app.data('Pyro.Time', time);		
-		
-	}, 1000);
+	// $loop.pyroloop('addAction', 'timeElapsed', function(){
+	// 
+	// 	var time = $app.data('Pyro.Time');
+	// 
+	// 	if(!time) time = { started : new Date().getTime(), elapsed : 0, now : new Date().getTime(), last : new Date().getTime() };
+	// 
+	//  		var last = time.now;
+	// 	time.now = new Date().getTime()
+	// 	time.elapsed = time.started - last;
+	// 	// console.log(Math.round(time.elapsed / 1000)*-1)
+	// 	
+	// 	$app.data('Pyro.Time', time);		
+	// 
+	// }, 1000);
+	
 	
 	var $patterns = $('#patterns').pyroqueue(patternconfig, patterndata);
+	
 	
 	var sliders = function(){
 						
 		return {
 			useX : false,
 			hold : true,
+			// addclass : 'hide-during-activity',
 			setup : function( scope ){
 				// console.log(scope.status.offset);
 				// console.log(scope.status.placement);
