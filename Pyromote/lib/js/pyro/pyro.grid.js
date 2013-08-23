@@ -244,7 +244,12 @@
 			event.preventDefault();
 			
 			var scope = $(this).data('Pyro.Grid');
-			scope.options.pressup.apply( this , [pos, event , scope] );
+			
+			if(!scope.options.pressup.apply( this , [ event, scope ] )) {
+				if(!scope.options.hold) {
+					scope.$pointer.hide(); //Hide by default.
+				}
+			}
 			
 		}
 		
