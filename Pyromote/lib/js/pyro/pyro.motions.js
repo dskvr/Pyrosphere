@@ -14,6 +14,8 @@
 		
 		enableHotkeys : false,
 		
+		addclass : '',
+		
 		onready : function( scope ){ },
 		onselect : function( scope, event ){  },
 		onnext : function( scope, event ){  },
@@ -101,6 +103,7 @@
 	//Changes pattern every X seconds.
 	
 	$.Pyro.Queue.Methods.playQueue = function( refresh, random ){
+		
 		var $trigger = $(this)
 		var $container = $trigger.parents('.selector');
 		var scope = $container.data('Pyro.Queue');
@@ -145,6 +148,7 @@
 				scope.toggles.$playqueue.addClass('active');
 				
 		$container.data('Pyro.Queue', scope);
+		
 	}
 	
 	$.Pyro.Queue.Methods.stopQueue = function(){
@@ -237,6 +241,8 @@
 		var scope = $container.data('Pyro.Queue');
 		
 		$container.addClass('selector');
+		
+		if(scope.options.addclass.length) $container.addClass(addclass);
 		
 		scope.$pane = $('<div>').appendTo($container).addClass('pane');
 		
