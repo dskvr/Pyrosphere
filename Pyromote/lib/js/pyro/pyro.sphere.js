@@ -71,7 +71,6 @@
 			
 			if(now - scope.status.lastRequest < scope.options.refreshRate && !forceSend) return; //Useful for mouseup.
 			
-			
 			scope.status.lastRequest = now;
 			
 						console.log(scope.request);
@@ -150,6 +149,11 @@
 			var scope = $(this).data('Pyro.Sphere');
 			if(typeof interval != 'integer') return;
 			// scope.socket.emit('pipe', '!'+pattern+'.');
+		}
+		
+		$.Pyro.Sphere.Methods.reset = function(){
+			var scope = $(this).data('Pyro.Sphere');
+			scope.socket.emit('pyro.pipe', '*2.');
 		}
 		
 		// Generic Send, formatted string.
