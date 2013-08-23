@@ -27,7 +27,7 @@ body 					 { background:#000; /*overflow:hidden;*/ }
 	top:0px; /*y*/
 	width:300px;
 	height:300px;
-	display:none;
+	display:block;
 	position:absolute;
 	z-index:99999;
 	opacity:0.4;
@@ -55,13 +55,13 @@ body 					 { background:#000; /*overflow:hidden;*/ }
 .grid .pointer .zero { 
 	background:#fff;
 	position:absolute;
-	width:100px;
-	height:100px;
+	width:10px;
+	height:10px;
 	display:block;
 	left:50%;
 	top:50%;
-	margin-left:-50px;
-	margin-top:-50px;
+	margin-left:-5px;
+	margin-top:-5px;
 }
 
 .follower {position:absolute;}
@@ -114,8 +114,20 @@ body::-moz-selection{
 
 #clock .progress { position:absolute; left:0px; top:0px; bottom:0px; display:block; background:rgba(255,255,255,0.3) }
 
-/*#master, #toolbar {display:none;}{}*/
-	
-/*#toolbar { display:none; }*/
+#preferences { position:absolute; bottom:0px;left:0px;right:200px; color:#888; text-transform:uppercase;font-size:11pt; z-index:99999; }
+#preferences input { max-width:30px; background:#111;border:1px solid #222; color:#c0c0c0; font-size:7pt; }
 
+#preferences .hold-release { display:none; }
+body.holding #preferences .hold-release { display:block; }
+
+#preferences .advanced-preferences { display:none; }
+
+#preferences > div { display: inline-block; }
+
+#preferences .button { display:inline-block; padding:20px 35px;; cursor:pointer; }
+#preferences .button:hover { background:#444; }
+
+.hold.button.active {background:green; color:#000;}
+
+/*#master, #toolbar {display:none;}{}*/ /*#toolbar { display:none; }*/
 #sliders { display:none; }
