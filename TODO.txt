@@ -1,0 +1,13 @@
+TODO
+
+- UI
+-- 
+
+- patterns
+-- Curate and delete bad ones!
+-- Fix queue status viz
+-- Add queue interval edit capability.
+
+- Tap
+-- On beat do...
+-- Pref

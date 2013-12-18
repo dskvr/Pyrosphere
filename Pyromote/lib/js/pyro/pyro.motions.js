@@ -130,6 +130,9 @@
 					}, refresh);
 					
 				} else {
+					
+					scope.options.onqueue.apply( self, [scope] );
+					
 					clearInterval(scope.queue.interval);
 					scope.queue.interval = setInterval(function(){
 
@@ -141,7 +144,8 @@
 						
 						scope.options.onqueue.apply( self, [scope] );
 
-					}, refresh)
+					}, refresh);
+					
 				}
 		
 				scope.queue.status = true;

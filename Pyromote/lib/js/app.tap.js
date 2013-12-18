@@ -7,9 +7,9 @@ $(function(){
 		tapperSelector : '.tap.button',
 		
 		setup : function( ){
-			var scope = $(this).data('Pyro.Tap');
-					scope.$thing = $('<div>').appendTo( $(this) ).attr('id', 'thing');
-					scope.beats = 0;
+			// var scope = $(this).data('Pyro.Tap');
+					// scope.$thing = $('<div>').appendTo( $(this) ).attr('id', 'thing');
+					// scope.beats = 0;
 		},
 		beforetap : function( scope ){
 			// console.log('Tapped!');

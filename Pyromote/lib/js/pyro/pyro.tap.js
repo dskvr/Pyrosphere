@@ -26,7 +26,7 @@ scope =false;
 		console.log('Pyro Tap!');
 		
 		var self = this;
-		var scope =$.extend( {}, $.Pyro.Tap.DefaultOptions, options);
+		var scope = $.extend( {}, $.Pyro.Tap.DefaultOptions, options);
 		
 		scope.status = new Object();
 		scope.status.multiplier = 1;
@@ -34,9 +34,9 @@ scope =false;
 		scope.millisPrevious = new Date().getTime();
 		scope.count = 0;
 		
-		$(self).data('Pyro.Tap', scope);
-		
 		scope.cacheBG = $('body').css('background-color');
+
+		$(self).data('Pyro.Tap', scope);
 	
 		$.Pyro.Tap.HTML.apply( this );
 		$.Pyro.Tap.Bind.apply( this );
@@ -64,24 +64,26 @@ scope =false;
 	$.Pyro.Tap.Methods.reset = function( scope ) {
 		
 		var scope = $(this).data("Pyro.Tap");
-		
-		$('body').css('background', scope.cacheBG);
 
-		clearTimeout(scope.timeout);
-		
-		console.log('resetting');
-		
+		$('body').stop().css('background', scope.cacheBG);
+
+		clearInterval(scope.interval);
+
+		// console.log('resetting');
+
 		scope.$average.attr('value', null);
 		scope.$whole.attr('value', null);
 		scope.$tap.attr('value', null);
 		scope.$millis.attr('value', null);
 		scope.$wait.attr('value', null);
-		
+
 		scope.status.average 	= scope.$average.attr('value'),
 		scope.status.whole 		= scope.$whole.attr('value'),
 		scope.status.taps 		= scope.$tap.attr('value'),
 		scope.status.millis 	= scope.$millis.attr('value') * scope.status.multiplier,
 		scope.status.timeout 	= scope.$wait.attr('value');
+		
+		$('body').removeClass('tapping');
 		
 		$(this).data("Pyro.Tap", scope);
 	}
@@ -131,6 +133,7 @@ scope =false;
 		if(scope.valid) {
 			clearTimeout(scope.timeout);
 			scope.timeout = setTimeout(function(){
+				$('body').addClass('tapping');
 				var scope = $tap.data('Pyro.Tap');
 				scope.onreset.apply( self );
 				// alert(scope.status.millis)

@@ -77,11 +77,5 @@ All of the patterns for the Pyrosphere are contained within the /Pyromotions fol
 - Get feedback from UI (This branch is not yet published! view demo.html for the Ported Prototype!)
 
 # Credits
-- Visionary: Erin Banwell
-- Original Pyrosphere Code and Baller-ass Model: Steve Cronberg
-- Shift Registers: Designed & Soldered by Leif
-- Fire and Safety: Shannon Stillman
-- Pyrosphere Build Crew: James Hall, Shine, Billy Hopkins,
-- Programming: Jordan Layman and Sean Mitchell
-- Funding: Countless individuals, thanks!
+Created by Erin Banwell. Programming by Sean Mitchell and Jordan Layman. Shift Registers designed by Leif Ames. Pyrotechnics by Shannon Stillman. Assembly by Billy Hopkins, Daniel Govan, Margaret Jones, James Hall and Shine Coubol. Support Structure by Scotty. 
 

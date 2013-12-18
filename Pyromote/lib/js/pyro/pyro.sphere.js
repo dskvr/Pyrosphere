@@ -73,7 +73,7 @@
 			
 			scope.status.lastRequest = now;
 			
-						console.log(scope.request);
+						//console.log(scope.request);
 			
 			scope.socket.emit('pyro.pipe', scope.request);
 			
@@ -127,7 +127,7 @@
 		$.Pyro.Sphere.Methods.send = function( request ) {
 			var scope = $(this).data('Pyro.Sphere');
 			//Make sure this is properly formatted!
-			console.log( request );
+			//console.log( request );
 			scope.socket.emit('pyro.pipe', request);
 			// scope.socket.emit('pyro.pipe', request);
 		}

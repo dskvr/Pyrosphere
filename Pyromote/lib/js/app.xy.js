@@ -10,7 +10,7 @@ $(function(){
 	var pyro = new Object();
 	
 	// Configuration
-	var breakAfter = 2000;
+	var breakAfter = 500;
 	
 	var breakTimeout = false; // placeholder for window timeout.
 	// var pyro.ui = $.pyroUI();
@@ -18,7 +18,15 @@ $(function(){
 	
 	var $app = $('body');
 	var $sphere = $app.pyrosphere( { refreshRate : 60 } );
+	var $tapbpm = $('.tap-details');
 	// var $loop = $app.pyroloop();
+	
+	var holdSetup = function(scope){
+		if(scope.options.hold) {
+			$('body').addClass('holding');
+			$('.button.hold').addClass('active');
+		}
+	}
 	
 	var holdToggle = function(){
 		var scope = $('#grid').data('Pyro.Grid');
@@ -29,15 +37,52 @@ $(function(){
 	
 	var holdOn = function(){
 		var scope = $('#grid').data('Pyro.Grid');
+		$('body').addClass('holding');
 		scope.options.hold = true;
 		$('#grid').data('Pyro.Grid', scope);
 	}
 	
 	var holdOff = function(){
 		var scope = $('#grid').data('Pyro.Grid');
+		$('body').removeClass('holding');
 		scope.options.hold = false;
 		$('#grid').data('Pyro.Grid', scope);
 	}
+	
+	var range = function(scope){
+		
+		var range = new Object();
+		
+		//console.log(scope.status.value);
+		
+		var durationThresh = Math.floor($.Pyro.Config.Limits.Duration.Max / 3);
+				if(scope.status.value.x < durationThresh) range.duration = 'fast';
+				else if(scope.status.value.x > durationThresh*2) range.duration = 'slow';
+				else range.duration = 'medium';
+				
+		var intervalThresh = Math.floor($.Pyro.Config.Limits.Interval.Max / 3);
+				if(scope.status.value.y < intervalThresh) range.interval = 'fast';
+				else if(scope.status.value.y > intervalThresh*2) range.interval = 'slow';
+				else range.interval = 'medium';
+		
+		//console.log(range)
+		
+		var res = false;
+		
+		if 		 (range.interval == "fast" && range.duration == "fast") 		res = "Some like it fast."
+		else if(range.interval == "fast" && range.duration == "medium")		res = "Fast moving, tracers";
+		else if(range.interval == "fast" && range.duration == "slow")			res = "Fast and trippy";
+		else if(range.interval == "medium" && range.duration == "fast")		res = "Work into it";
+		else if(range.interval == "medium" && range.duration == "") 			res = "Keepying it classy";
+		else if(range.interval == "medium" && range.duration == "") 			res = "Downtempo Much?";
+		else if(range.interval == "slow" && range.duration == "")					res = "Ohhhhhh thasss trippy";
+		else if(range.interval == "slow" && range.duration == "")					res = "Is this really happening?";
+		else if(range.interval == "slow" && range.duration == "") 				res = "Some like it hot.";
+		
+		$('.hey-girl').html(res);
+		
+	}
+	
 	
 	var xy = new Object();
 	
@@ -113,7 +158,8 @@ $(function(){
 			];
 			
 			$('.button.hold').bind('click', holdToggle)	;
-			if(scope.options.hold) $('.button.hold').addClass('active');
+			
+			holdSetup(scope);
 			
 			$grid.data('Pyro.Grid', scope);
 			
@@ -130,8 +176,11 @@ $(function(){
 			// scope.$stats.find('.x .value').css('font-size', size.x+'pt');
 			// scope.$stats.find('.y .value').css('font-size', size.y+'pt');
 			
-			if(!$sphere.pyrosphere('get', 'active')) $sphere.pyrosphere('set', 'active', 1 );
+			range(scope);
 			
+			// if(!$sphere.pyrosphere('get', 'active')) $sphere.pyrosphere('set', 'active', 1 );
+			
+			$sphere.pyrosphere('send', "*1.");
 			$sphere.pyrosphere('set', 'frameDuration', scope.status.value.x );
 			$sphere.pyrosphere('set', 'frameInterval', scope.status.value.y );
 			
@@ -183,7 +232,7 @@ $(function(){
 			var $grid = $(self);
 			scope.status.idle = false;
 			
-			console.log('Hello world!');
+			//console.log('Hello world!');
 			
 			if(scope.options.sound && !scope.options.minimal) $.playSound('lib/sounds/positive.wav', 2000); 
 			
@@ -199,7 +248,7 @@ $(function(){
 			if(scope.options.sound && scope.status.clicks > 1 && !scope.options.minimal) $.playSound('lib/sounds/welcome.wav', 2000);
 			scope.status.clicks++;
 			
-			$('.tap-details').pyrotap('reset');
+			$tapbpm.pyrotap('reset');
 			
 			clearTimeout(breakTimeout);
 			$('.hide-during-activity').hide();
@@ -221,7 +270,7 @@ $(function(){
 			
 			clearTimeout(breakTimeout);
 			breakTimeout = setTimeout(function(){
-				console.log('breaking');
+				//console.log('breaking');
 				$('.hide-during-activity').fadeIn(300);
 			}, breakAfter);
 
@@ -234,8 +283,9 @@ $(function(){
 					
 					scope.$pointer.stop().animate(trans, 200, function(){});
 						
-				$sphere.pyrosphere('set', 'active', 0);
-				$sphere.pyrosphere('process');
+				// $sphere.pyrosphere('set', 'active', 0);
+				// $sphere.pyrosphere('process');
+				$sphere.pyrosphere('send', "*0.");
 			}
 			
 			return true; //RETURN TRUE! If not, default core functionality (HIDE) will take over. You'll get frustrated. Return true.
@@ -292,12 +342,12 @@ $(function(){
 		},
 		
 		onready : function(){
-			console.log('OK!');
+			//console.log('OK!');
 		},
 		
 		onselect : function( scope, event ){
 			
-			$('.tap-details').pyrotap('reset');
+			$tapbpm.pyrotap('reset');
 			
 			//If enough time has passed...
 			$sphere.pyrosphere('set', 'pattern', scope.current.data.filename);
@@ -316,7 +366,7 @@ $(function(){
 	//  		var last = time.now;
 	// 	time.now = new Date().getTime()
 	// 	time.elapsed = time.started - last;
-	// 	// console.log(Math.round(time.elapsed / 1000)*-1)
+	// 	// //console.log(Math.round(time.elapsed / 1000)*-1)
 	// 	
 	// 	$app.data('Pyro.Time', time);		
 	// 
@@ -333,12 +383,12 @@ $(function(){
 			hold : true,
 			// addclass : 'hide-during-activity',
 			setup : function( scope ){
-				// console.log(scope.status.offset);
-				// console.log(scope.status.placement);
+				// //console.log(scope.status.offset);
+				// //console.log(scope.status.placement);
 			},
 			pressdown : function( pos, event, scope ){
-				// console.log(scope.status.offset);
-				console.log( pos );
+				// //console.log(scope.status.offset);
+				//console.log( pos );
 			}
 		}
 		
@@ -349,10 +399,10 @@ $(function(){
 	// $('#pattern').pyrogrid(new sliders());	
 	// $('#interval').pyrogrid(new sliders());
 	
-	// console.log('///');
-	// console.log($('#duration').data('Pyro.Grid').status.offset);
-	// console.log('///');		
-	// console.log($grid);
-	// console.log($patterns);
-	// console.log($sphere);
+	// //console.log('///');
+	// //console.log($('#duration').data('Pyro.Grid').status.offset);
+	// //console.log('///');		
+	// //console.log($grid);
+	// //console.log($patterns);
+	// //console.log($sphere);
 });
